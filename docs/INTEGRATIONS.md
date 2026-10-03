@@ -89,3 +89,28 @@ Four research sources work with zero credentials and are always available:
 All research providers share the `ResearchProvider` contract, so adding another
 source is one adapter class in `app/integrations/research_providers.py` plus a
 registry entry - the API and UI pick it up automatically.
+
+
+## Free LLM providers (permanent free tiers)
+
+All four are OpenAI-compatible, so they share one adapter. Set `AI_PROVIDER`
+plus the matching key in `.env` - leave `AI_MODEL` empty for the default model.
+
+| AI_PROVIDER   | Free key from                              | Default model            | Free limits (approx.)        |
+|---------------|--------------------------------------------|--------------------------|------------------------------|
+| `groq`        | console.groq.com/keys                      | openai/gpt-oss-20b       | 30 RPM, 1,000 requests/day  |
+| `mistral`     | console.mistral.ai/api-keys               | mistral-small-latest     | ~1 request/sec               |
+| `openrouter`  | openrouter.ai/keys (`:free` models)       | openai/gpt-oss-20b:free   | 20 RPM, 50 requests/day/model|
+| `gemini`      | aistudio.google.com/app/apikey             | gemini-2.5-flash         | 15-30 RPM, 1,500 requests/day|
+
+Any other OpenAI-compatible endpoint (self-hosted vLLM, Ollama, LM Studio):
+`AI_PROVIDER=openai_compatible` + `OPENAI_BASE_URL` + `OPENAI_API_KEY`.
+
+Honest caveats:
+- Free-tier prompts may be used by the provider to improve their models
+  (Gemini and Mistral note this in their terms). Do not route secrets through
+  free tiers; paid OpenAI/Anthropic keys remain the private option.
+- Rate limits fit a daily agent routine fine, but a Founder Mode burst of
+  concurrent tasks can hit them; the orchestrator's retry + honest failure
+  handling will surface it rather than fake success.
+- Cohere is intentionally NOT included: its free tier is non-commercial only.

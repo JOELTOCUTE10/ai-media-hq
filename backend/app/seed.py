@@ -79,6 +79,10 @@ DEFAULT_CHANNELS = [
 INTEGRATION_DEFS = [
     ("ai_openai", "OpenAI (AI provider)"),
     ("ai_anthropic", "Anthropic (AI provider)"),
+    ("ai_groq", "Groq (free tier)"),
+    ("ai_mistral", "Mistral (free tier)"),
+    ("ai_openrouter", "OpenRouter free models"),
+    ("ai_gemini", "Google Gemini (free tier)"),
     ("research_tavily", "Tavily web search"),
     ("research_youtube", "YouTube Data API (search/analytics)"),
     ("youtube_publishing", "YouTube publishing (OAuth)"),
@@ -108,6 +112,10 @@ def seed_org(db: Session, org_id: int) -> None:
     integration_keys = {
         "ai_openai": bool(settings.OPENAI_API_KEY),
         "ai_anthropic": bool(settings.ANTHROPIC_API_KEY),
+        "ai_groq": bool(settings.GROQ_API_KEY),
+        "ai_mistral": bool(settings.MISTRAL_API_KEY),
+        "ai_openrouter": bool(settings.OPENROUTER_API_KEY),
+        "ai_gemini": bool(settings.GEMINI_API_KEY),
         "research_tavily": bool(settings.TAVILY_API_KEY),
         "research_youtube": bool(settings.YOUTUBE_DATA_API_KEY),
         "youtube_publishing": bool(settings.YOUTUBE_CLIENT_ID and settings.YOUTUBE_CLIENT_SECRET),

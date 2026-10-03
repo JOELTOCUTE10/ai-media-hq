@@ -22,9 +22,16 @@ class Settings(BaseSettings):
 
     # AI provider: openai | anthropic | fake (tests) | unconfigured
     AI_PROVIDER: str = "unconfigured"
-    AI_MODEL: str = "gpt-4o-mini"
+    AI_MODEL: str = ""  # empty = provider default (see ai_providers.DEFAULT_MODELS)
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
+    # Generic OpenAI-compatible endpoint (self-hosted or unlisted providers)
+    OPENAI_BASE_URL: str = ""
+    # Free-tier OpenAI-compatible providers (mnfst/awesome-free-llm-apis)
+    GROQ_API_KEY: str = ""
+    MISTRAL_API_KEY: str = ""
+    OPENROUTER_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
 
     # Research integrations
     TAVILY_API_KEY: str = ""

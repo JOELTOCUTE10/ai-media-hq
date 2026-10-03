@@ -7,6 +7,7 @@ from app.api.deps import get_current_user, require_admin
 from app.core.config import get_settings
 from app.core.events import EventType
 from app.db.session import get_db
+from app.integrations.ai_providers import DEFAULT_MODELS
 from app.models.ops import AuditLog, Integration
 from app.models.organization import Organization, User
 from app.services.event_bus import publish
@@ -32,7 +33,8 @@ def get_settings_endpoint(user: User = Depends(get_current_user), db: Session = 
     integrations = db.query(Integration).filter(Integration.org_id == user.org_id).all()
     return {
         "organization": {"id": org.id, "name": org.name, "settings": _org_settings(db, org)},
-        "system": {"ai_provider": settings.AI_PROVIDER, "ai_model": settings.AI_MODEL,
+        "system": {"ai_provider": settings.AI_PROVIDER,
+                   "ai_model": settings.AI_MODEL or DEFAULT_MODELS.get(settings.AI_PROVIDER.lower(), "gpt-4o-mini"),
                    "task_runner_enabled": settings.TASK_RUNNER_ENABLED,
                    "monthly_budget_usd": settings.MONTHLY_BUDGET_USD},
         "integrations": [{"key": i.key, "name": i.name, "status": i.status} for i in integrations],

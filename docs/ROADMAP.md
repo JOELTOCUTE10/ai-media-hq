@@ -62,4 +62,6 @@ unbuilt UI pages say so.
   Wikipedia, Hacker News, arXiv and OpenAlex ship free with no key)
 - YouTube Analytics API ingestion (manual snapshot ingestion works today)
 - Celery/Redis worker drop-in (task_runner.execute is already isolated)
+- Free-tier LLM providers (groq/mistral/openrouter/gemini) are wired in; swap
+  by setting AI_PROVIDER in .env - agents work at zero API cost on free tiers
 - Real-time UI updates (currently refresh-based)
