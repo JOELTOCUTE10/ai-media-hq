@@ -72,3 +72,20 @@ guidance - success is never faked.
 4. Publishing requires the readiness gate: QC PASS, no disputed/unsupported
    claims, no unknown/blocked rights, and (with auto-publish off) a human
    approval. Scheduled jobs are attempted automatically when due.
+
+
+## Free research providers (no API key)
+
+Four research sources work with zero credentials and are always available:
+
+- `wikipedia` - MediaWiki full-text search (secondary reference; respects the
+  source hierarchy for claim verification)
+- `hackernews` - Hacker News story search via the Algolia API (trend-discovery
+  signal; classified as social, never treated as factual evidence)
+- `arxiv` - research preprints (original_research source tier)
+- `openalex` - scholarly works catalog with reconstructed abstracts
+  (original_research source tier)
+
+All research providers share the `ResearchProvider` contract, so adding another
+source is one adapter class in `app/integrations/research_providers.py` plus a
+registry entry - the API and UI pick it up automatically.

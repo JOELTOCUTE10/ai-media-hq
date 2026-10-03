@@ -10,7 +10,7 @@ interface Doc {
 export default function Research() {
   const [docs, setDocs] = useState<Doc[]>([]);
   const [query, setQuery] = useState("");
-  const [provider, setProvider] = useState("tavily");
+  const [provider, setProvider] = useState("wikipedia");
   const [topic, setTopic] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -40,7 +40,7 @@ export default function Research() {
     <>
       <div className="page-head">
         <h1>Research</h1>
-        <span className="subtle">Sources are real APIs only - unconfigured providers return setup guidance, never fake results.</span>
+        <span className="subtle">Free providers (Wikipedia, Hacker News, arXiv, OpenAlex) work with no API key. Key-based providers return setup guidance, never fake results.</span>
       </div>
       <Err message={error} />
       <Note message={note} />
@@ -51,8 +51,12 @@ export default function Research() {
           </Field>
           <Field label="Provider">
             <select value={provider} onChange={(e) => setProvider(e.target.value)}>
-              <option value="tavily">Tavily web search</option>
-              <option value="youtube">YouTube Data API</option>
+              <option value="wikipedia">Wikipedia (free, no key)</option>
+              <option value="hackernews">Hacker News (free, no key)</option>
+              <option value="arxiv">arXiv research (free, no key)</option>
+              <option value="openalex">OpenAlex scholarly (free, no key)</option>
+              <option value="tavily">Tavily web search (needs key)</option>
+              <option value="youtube">YouTube Data API (needs key)</option>
             </select>
           </Field>
           <Field label="Topic tag (optional)">

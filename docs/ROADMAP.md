@@ -58,7 +58,8 @@ unbuilt UI pages say so.
 
 ## Remaining opportunities
 
-- RSS/Google Trends research adapters (interface + registry already in place)
+- RSS/Google Trends research adapters (interface + registry already in place;
+  Wikipedia, Hacker News, arXiv and OpenAlex ship free with no key)
 - YouTube Analytics API ingestion (manual snapshot ingestion works today)
 - Celery/Redis worker drop-in (task_runner.execute is already isolated)
 - Real-time UI updates (currently refresh-based)
