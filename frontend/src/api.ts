@@ -1,4 +1,4 @@
-const API_URL = (import.meta as any).env?.VITE_API_URL ?? "";
+const API_URL = (import.meta as any).env?.VITE_API_URL ?? "https://ai-media-hq-production.up.railway.app";
 
 let token: string = localStorage.getItem("token") ?? "";
 
@@ -39,9 +39,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     try {
       const body = await res.json();
       detail = typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail ?? body);
-    } catch {
-      /* no body */
-    }
+    } catch {}
     throw new ApiError(res.status, detail);
   }
   if (res.status === 204) return {} as T;
@@ -52,7 +50,6 @@ export interface Channel {
   id: number; name: string; slug: string; description: string; niche: string; audience: string;
   is_active: boolean; approval_required: boolean;
   content_rules: Record<string, unknown>; publishing_rules: Record<string, unknown>;
-  style: Record<string, unknown>;
 }
 export interface Agent {
   id: number; key: string; name: string; role: string; description: string; department: string;
