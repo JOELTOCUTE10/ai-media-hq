@@ -1,10 +1,10 @@
 const API_URL = (import.meta as any).env?.VITE_API_URL ?? "https://ai-media-hq-production.up.railway.app";
 
-let token: string = localStorage.getItem("token") ?? "";
+let token: string = (localStorage.getItem("token") ?? "").trim();
 
 export function setToken(value: string) {
-  token = value;
-  localStorage.setItem("token", value);
+  token = value.trim();
+  localStorage.setItem("token", token);
 }
 
 export function clearToken() {
@@ -21,11 +21,11 @@ export class ApiError extends Error {
 }
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(API_URL + path, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(token ? { Authorization: "Bearer " + token.trim() } : {}),
       ...(options.headers ?? {}),
     },
   });
@@ -35,7 +35,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     throw new ApiError(401, "Not authenticated");
   }
   if (!res.ok) {
-    let detail = `Request failed (${res.status})`;
+    let detail = "Request failed (" + res.status + ")";
     try {
       const body = await res.json();
       detail = typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail ?? body);
