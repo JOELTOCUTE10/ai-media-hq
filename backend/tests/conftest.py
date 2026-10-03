@@ -5,7 +5,7 @@ import uuid
 os.environ["AI_PROVIDER"] = "fake"
 os.environ["DATABASE_URL"] = "sqlite:///./test_ai_media_hq.db"
 os.environ["TASK_RUNNER_ENABLED"] = "false"
-os.environ["SECRET_KEY"] = "test-secret"
+os.environ["SECRET_KEY"] = "test-secret-key-at-least-32-bytes-long!!"
 
 if os.path.exists("./test_ai_media_hq.db"):
     os.remove("./test_ai_media_hq.db")

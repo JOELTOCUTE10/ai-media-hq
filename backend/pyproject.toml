@@ -8,3 +8,6 @@ ignore = ["E501", "UP042"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+filterwarnings = [
+    "ignore:Using `httpx` with `starlette.testclient`:UserWarning",
+]
