@@ -8,13 +8,24 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routers import (
     agents,
+    analytics,
     approvals,
     auth,
     channels,
+    costs,
     dashboard,
     events,
+    experiments,
+    founder,
+    ideas,
+    knowledge,
     memory,
+    production,
+    publishing,
+    qc,
+    reports,
     research,
+    scripts,
     tasks,
     trends,
 )
@@ -60,7 +71,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for module in (auth, channels, agents, tasks, events, memory, research, trends, dashboard, settings_router, approvals):
+_routers = (auth, channels, agents, tasks, events, memory, research, trends,
+            dashboard, settings_router, approvals, knowledge, ideas, scripts, qc,
+            production, publishing, analytics, experiments, costs, reports, founder)
+for module in _routers:
     app.include_router(module.router)
 
 

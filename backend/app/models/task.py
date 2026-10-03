@@ -1,7 +1,7 @@
 """Persistent task manager, dependencies, workflows (Sections 38-39)."""
 from datetime import datetime
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -31,6 +31,7 @@ class Task(TimestampMixin, Base):
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     workflow_run_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    goal_id: Mapped[int | None] = mapped_column(ForeignKey("goals.id"), nullable=True, index=True)
 
 
 class TaskDependency(TimestampMixin, Base):
@@ -61,3 +62,15 @@ class WorkflowRun(TimestampMixin, Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     context: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+class Goal(TimestampMixin, Base):
+    """Founder Mode (Section 7): an objective broken down into linked tasks."""
+
+    __tablename__ = "goals"
+
+    org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), index=True)
+    title: Mapped[str] = mapped_column(String(400))
+    description: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(20), default="active", index=True)
+    target_date: Mapped[object] = mapped_column(Date, nullable=True)

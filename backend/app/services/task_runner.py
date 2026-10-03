@@ -62,6 +62,24 @@ def run_ready_tasks() -> int:
     return dispatched
 
 
+def publishing_scheduled(db) -> int:
+    """Scheduler (Section 40): attempt every scheduled publishing job that is due."""
+    from datetime import UTC, datetime
+
+    from app.models.organization import Organization
+    from app.models.production import PublishingJob
+    from app.services.publishing_service import execute_publish
+
+    now = datetime.now(UTC)
+    due = (db.query(PublishingJob)
+           .filter(PublishingJob.status == "scheduled",
+                   PublishingJob.scheduled_at <= now).all())
+    for job in due:
+        org = db.get(Organization, job.org_id)
+        execute_publish(db, org, job)
+    return len(due)
+
+
 async def runner_loop(interval: float) -> None:
     logger.info("task runner started", extra={"status": "started"})
     while True:
@@ -69,4 +87,9 @@ async def runner_loop(interval: float) -> None:
             run_ready_tasks()
         except Exception:  # noqa: BLE001
             logger.exception("task runner cycle failed", extra={"error": "runner_cycle"})
+        try:
+            with SessionLocal() as db:
+                await asyncio.to_thread(publishing_scheduled, db)
+        except Exception:  # noqa: BLE001
+            logger.exception("publishing scheduler failed", extra={"error": "publishing_scheduler"})
         await asyncio.sleep(interval)

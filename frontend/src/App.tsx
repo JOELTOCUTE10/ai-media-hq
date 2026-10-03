@@ -9,20 +9,19 @@ import Agents from "./pages/Agents";
 import Tasks from "./pages/Tasks";
 import SettingsPage from "./pages/Settings";
 import MemoryPage from "./pages/Memory";
-
-const PHASES: Record<string, string> = {
-  "/research": "Phase 3 - Research intelligence. APIs exist (see docs/ROADMAP.md); UI lands next phase.",
-  "/trends": "Phase 3 - The Trend Radar scan API is live (/api/trends); this page ships with the research UI.",
-  "/ideas": "Phase 4 - Content Idea Engine. Data models and API are scaffolded; UI next.",
-  "/content-pipeline": "Phase 4 - Idea-to-script pipeline with the Strategy Room.",
-  "/production": "Phase 5 - Production engine, assets, QC and rights.",
-  "/publishing": "Phase 6 - YouTube publishing (OAuth + uploads). Never simulated.",
-  "/analytics": "Phase 7 - Analytics ingestion and composite performance.",
-  "/experiments": "Phase 7 - Experiment lab with tracked hypotheses.",
-  "/knowledge": "Phase 3 - Knowledge graph entities and relationships.",
-  "/costs": "Phase 8 - Cost intelligence dashboards (model usage is already tracked per task).",
-  "/reports": "Phase 8 - Daily executive report generation.",
-};
+import Research from "./pages/Research";
+import Trends from "./pages/Trends";
+import Knowledge from "./pages/Knowledge";
+import Ideas from "./pages/Ideas";
+import ContentPipeline from "./pages/ContentPipeline";
+import Production from "./pages/Production";
+import Approvals from "./pages/Approvals";
+import Publishing from "./pages/Publishing";
+import Analytics from "./pages/Analytics";
+import Experiments from "./pages/Experiments";
+import Costs from "./pages/Costs";
+import Reports from "./pages/Reports";
+import FounderMode from "./pages/Founder";
 
 function Layout() {
   const loc = useLocation();
@@ -74,10 +73,19 @@ export default function App() {
               <Route path="/tasks" element={<Tasks />} />
               <Route path="/memory" element={<MemoryPage />} />
               <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/approvals" element={<Placeholder />} />
-              {Object.keys(PHASES).map((path) => (
-                <Route key={path} path={path} element={<Placeholder />} />
-              ))}
+              <Route path="/research" element={<Research />} />
+              <Route path="/trends" element={<Trends />} />
+              <Route path="/knowledge" element={<Knowledge />} />
+              <Route path="/ideas" element={<Ideas />} />
+              <Route path="/content-pipeline" element={<ContentPipeline />} />
+              <Route path="/production" element={<Production />} />
+              <Route path="/approvals" element={<Approvals />} />
+              <Route path="/publishing" element={<Publishing />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/experiments" element={<Experiments />} />
+              <Route path="/costs" element={<Costs />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/founder" element={<FounderMode />} />
               <Route path="*" element={<Placeholder />} />
             </Route>
           </>
@@ -89,7 +97,7 @@ export default function App() {
 
 function Placeholder() {
   const loc = useLocation();
-  const note = PHASES[loc.pathname] ?? "This module is on the roadmap (see docs/ROADMAP.md).";
+  const note = "This module does not exist yet - it is on the roadmap (see docs/ROADMAP.md).";
   return (
     <div className="card">
       <h1 style={{ fontSize: 16 }}>{loc.pathname.replace("/", "").replace("-", " ")}</h1>

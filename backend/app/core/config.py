@@ -28,6 +28,9 @@ class Settings(BaseSettings):
 
     # Research integrations
     TAVILY_API_KEY: str = ""
+    # Video generation
+    VIDEO_PROVIDER_API_KEY: str = ""
+    VIDEO_PROVIDER_URL: str = ""
     YOUTUBE_DATA_API_KEY: str = ""
 
     # YouTube publishing (Phase 6)

@@ -48,3 +48,27 @@ flow ships in Phase 6. Uploads are NEVER faked.
 Research documents carry `source_type`; trend scoring dampens social signals,
 and factual claims must cite primary/official/research sources. Social posts
 are trend-discovery signals, not evidence.
+
+
+## Video generation providers
+
+`VIDEO_PROVIDER_URL` + `VIDEO_PROVIDER_API_KEY` activate the `external`
+production provider. Contract: `POST {URL}/render` with Bearer auth and a JSON
+body `{"script": {...}, "config": {...}}` must return `{"video_url": "..."}`.
+The `user_media` provider needs no credentials: it registers a media URL you
+supply as the produced asset. Unconfigured providers fail with explicit setup
+guidance - success is never faked.
+
+## YouTube publishing (full flow)
+
+1. Create a Google Cloud project, enable YouTube Data API v3, create an OAuth
+   client (type "Web application") with redirect URI
+   `http://localhost:8000/api/publishing/youtube/callback`.
+2. Set `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REDIRECT_URI`
+   in `backend/.env`.
+3. In the dashboard (Publishing page) click "Get consent URL", complete the
+   Google consent screen. The callback exchanges the code for tokens which
+   are stored server-side (never exposed through the API).
+4. Publishing requires the readiness gate: QC PASS, no disputed/unsupported
+   claims, no unknown/blocked rights, and (with auto-publish off) a human
+   approval. Scheduled jobs are attempted automatically when due.

@@ -25,17 +25,40 @@ unbuilt UI pages say so.
 - Dashboard endpoint built from real data with computed recommendations
 - Kill switches: operations/publishing pause + auto-publish flag (audit-logged)
 - Structured JSON logging with task/agent/status fields
-- React dashboard: Login, Command Center, Channels, Agents, Tasks, Memory,
-  Settings; placeholder pages are explicit about their phase
+- React dashboard: Login, Command Center, Founder Mode, Channels, Agents,
+  Tasks, Research, Trends, Knowledge, Ideas, Content Pipeline, Production,
+  Approvals, Publishing, Analytics, Experiments, Memory, Costs, Reports,
+  Settings - every page works on real data
 
-## Next phases (models + architecture already in place)
+## Delivered in v0.2 (all phases 3-8)
 
-- Phase 3: Research UI, knowledge graph endpoints, RSS/scheduled scans
-- Phase 4: Idea engine UI, Strategy Room (multi-agent idea review), script
-  engine with versions (all models exist), claim-level fact checking flow
-- Phase 5: VideoProvider abstraction implementations, QC engine, rights gating
-- Phase 6: YouTube OAuth callback + real uploads, scheduling agent
-- Phase 7: Analytics ingestion, experiment lab UI, learning insights
-- Phase 8: Cost dashboards, daily executive report, system health UI
-- Founder Mode: goal decomposition on top of the existing task graph
+- Phase 3: Research UI (Tavily/YouTube search + document library), Trend
+  Radar page with expandable "why detected" signals, knowledge graph
+  (entities, relationships, graph endpoint)
+- Phase 4: Idea engine with lifecycle transitions, Content Passport (full
+  auditable history per video), Strategy Room (5 reviewers + synthesis, real
+  orchestrator runs, honest failures), script engine with versions/review,
+  claim-level fact checking (disputed/unsupported claims block publishing)
+- Phase 5: VideoProvider abstraction (user_media registers real user-supplied
+  media; external AI provider requires credentials and never fakes success),
+  assets, QC engine (PASS/FAIL/NEEDS_REVIEW with reasons), rights records
+  (unknown rights block publishing by default)
+- Phase 6: Approval center (request/decide flow), YouTube OAuth consent +
+  token exchange + resumable upload (real Google endpoints, tokens stored
+  server-side and never exposed), scheduling (due scheduled jobs attempted by
+  the background scheduler), publish-time readiness gate
+- Phase 7: Analytics snapshot ingestion, composite performance score
+  (40% retention / 30% engagement / 30% views-vs-median, documented),
+  channel rollups, Experiment Lab (honest conclusions + limitations),
+  Learning Engine (insights with sample-size guard - small samples are
+  reported as insufficient, never as rules)
+- Phase 8: Cost intelligence (by category/channel/day, budget tracking),
+  daily executive report generated from actual stored data, Founder Mode
+  (goal -> 6 real linked tasks with agents, dependencies, progress)
+
+## Remaining opportunities
+
+- RSS/Google Trends research adapters (interface + registry already in place)
+- YouTube Analytics API ingestion (manual snapshot ingestion works today)
 - Celery/Redis worker drop-in (task_runner.execute is already isolated)
+- Real-time UI updates (currently refresh-based)

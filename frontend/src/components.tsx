@@ -28,11 +28,12 @@ export function Empty({ children }: { children: React.ReactNode }) {
   return <div className="empty">{children}</div>;
 }
 
-export const NAV: { group: string; items: { to: string; label: string; phase?: string }[] }[] = [
+export const NAV: { group: string; items: { to: string; label: string }[] }[] = [
   {
     group: "Command",
     items: [
       { to: "/", label: "Command Center" },
+      { to: "/founder", label: "Founder Mode" },
       { to: "/channels", label: "Channels" },
       { to: "/agents", label: "Agents" },
       { to: "/tasks", label: "Tasks" },
@@ -41,29 +42,29 @@ export const NAV: { group: string; items: { to: string; label: string; phase?: s
   {
     group: "Intelligence",
     items: [
-      { to: "/research", label: "Research", phase: "Phase 3" },
-      { to: "/trends", label: "Trends", phase: "Phase 3" },
-      { to: "/ideas", label: "Ideas", phase: "Phase 4" },
+      { to: "/research", label: "Research" },
+      { to: "/trends", label: "Trends" },
+      { to: "/knowledge", label: "Knowledge" },
     ],
   },
   {
     group: "Pipeline",
     items: [
-      { to: "/content-pipeline", label: "Content Pipeline", phase: "Phase 4" },
-      { to: "/production", label: "Production", phase: "Phase 5" },
+      { to: "/ideas", label: "Ideas" },
+      { to: "/content-pipeline", label: "Content Pipeline" },
+      { to: "/production", label: "Production" },
       { to: "/approvals", label: "Approvals" },
-      { to: "/publishing", label: "Publishing", phase: "Phase 6" },
+      { to: "/publishing", label: "Publishing" },
     ],
   },
   {
     group: "Growth & Ops",
     items: [
-      { to: "/analytics", label: "Analytics", phase: "Phase 7" },
-      { to: "/experiments", label: "Experiments", phase: "Phase 7" },
-      { to: "/knowledge", label: "Knowledge", phase: "Phase 3" },
+      { to: "/analytics", label: "Analytics" },
+      { to: "/experiments", label: "Experiments" },
       { to: "/memory", label: "Memory" },
-      { to: "/costs", label: "Costs", phase: "Phase 8" },
-      { to: "/reports", label: "Reports", phase: "Phase 8" },
+      { to: "/costs", label: "Costs" },
+      { to: "/reports", label: "Reports" },
     ],
   },
   {
@@ -96,3 +97,41 @@ export function Sidebar() {
     </aside>
   );
 }
+
+export function Btn({ children, onClick, kind, disabled }: {
+  children: React.ReactNode; onClick?: () => void; kind?: "ghost" | "danger"; disabled?: boolean;
+}) {
+  return (
+    <button className={`btn ${kind ?? ""}`} onClick={onClick} disabled={disabled}>
+      {children}
+    </button>
+  );
+}
+
+export function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="field">
+      <label>{label}</label>
+      {children}
+    </div>
+  );
+}
+
+export function Err({ message }: { message: string }) {
+  if (!message) return null;
+  return <div className="err-box">{message}</div>;
+}
+
+export function Note({ message }: { message: string }) {
+  if (!message) return null;
+  return <div className="ok-box">{message}</div>;
+}
+
+export function Progress({ pct }: { pct: number }) {
+  return (
+    <div className="progress-outer" title={`${pct}%`}>
+      <div className="progress-inner" style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} />
+    </div>
+  );
+}
+

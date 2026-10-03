@@ -1,7 +1,7 @@
 """Operations: costs, audit, events, integrations, schedules (Sections 30-40)."""
 from datetime import datetime
 
-from sqlalchemy import JSON, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import JSON, Date, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -67,3 +67,27 @@ class Schedule(TimestampMixin, Base):
     is_active: Mapped[bool] = mapped_column(default=True)
     last_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     next_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class Report(TimestampMixin, Base):
+    """Generated executive reports built from actual stored data (Section 32)."""
+
+    __tablename__ = "reports"
+
+    org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), index=True)
+    report_type: Mapped[str] = mapped_column(String(40), default="daily", index=True)
+    report_date: Mapped[object] = mapped_column(Date, index=True)
+    content: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+class OauthToken(TimestampMixin, Base):
+    """OAuth tokens for publishing platforms. Never exposed through the API."""
+
+    __tablename__ = "oauth_tokens"
+
+    org_id: Mapped[int] = mapped_column(ForeignKey("organizations.id"), index=True)
+    provider: Mapped[str] = mapped_column(String(60), index=True)
+    access_token: Mapped[str] = mapped_column(Text, default="")
+    refresh_token: Mapped[str] = mapped_column(Text, default="")
+    expires_at: Mapped[object] = mapped_column(DateTime(timezone=True), nullable=True)
+    scope: Mapped[str] = mapped_column(Text, default="")
