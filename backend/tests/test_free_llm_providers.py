@@ -16,9 +16,10 @@ from app.integrations.ai_providers import (
 
 
 @pytest.fixture()
-def prov():
-    """Set AI_PROVIDER with auto-restore."""
+def prov(monkeypatch):
+    """Set AI_PROVIDER with auto-restore; failover off (tested separately)."""
     original = get_settings().AI_PROVIDER
+    monkeypatch.setattr(get_settings(), "AI_FAILOVER_ENABLED", False)
 
     def _set(name):
         get_settings().AI_PROVIDER = name
@@ -41,6 +42,7 @@ def test_factory_builds_each_free_provider(prov):
         p = get_ai_provider()
         assert isinstance(p, OpenAICompatibleProvider), name
         assert p.name == name
+        assert p.use_env_model is True  # primary honors AI_MODEL
         assert p.base_url == base_url.rstrip("/")
         assert p.default_model == default_model
 
@@ -112,8 +114,36 @@ def test_completion_hits_configured_endpoint(prov, monkeypatch):
 def test_unconfigured_message_lists_free_options(monkeypatch):
     s = get_settings()
     monkeypatch.setattr(s, "AI_PROVIDER", "unconfigured")
+    # No keys anywhere: with nothing to fail over to, the unwrapped primary
+    # must still raise the honest configuration message naming free options.
+    for key in ("GROQ_API_KEY", "MISTRAL_API_KEY", "OPENROUTER_API_KEY",
+                "GEMINI_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"):
+        monkeypatch.setattr(s, key, "")
     with pytest.raises(ProviderNotConfiguredError, match="groq"):
         get_ai_provider().complete("s", "u")
+
+
+def test_unconfigured_primary_fails_over_to_any_configured_key(monkeypatch):
+    """Maximal automation: even with AI_PROVIDER unset, any real key on
+    file serves completions via the failover chain."""
+    s = get_settings()
+    monkeypatch.setattr(s, "AI_PROVIDER", "unconfigured")
+    monkeypatch.setattr(s, "GROQ_API_KEY", "test-groq-key")
+
+    class _Stub(OpenAICompatibleProvider):
+        def complete(self, system, user, temperature=0.4, max_tokens=2000):
+            from app.integrations.ai_providers import Completion
+            return Completion(text="ok", model="stub-model",
+                              prompt_tokens=1, completion_tokens=1, provider=self.name)
+
+    import app.integrations.ai_providers as ap
+    original = ap.OpenAICompatibleProvider
+    monkeypatch.setattr(ap, "OpenAICompatibleProvider", _Stub)
+    try:
+        result = get_ai_provider().complete("s", "u")
+        assert result.text == "ok"
+    finally:
+        monkeypatch.setattr(ap, "OpenAICompatibleProvider", original)
 
 
 def test_default_models_table_complete():

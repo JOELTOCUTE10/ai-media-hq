@@ -27,6 +27,10 @@ class Settings(BaseSettings):
 
     # AI provider: openai | anthropic | fake (tests) | unconfigured
     AI_PROVIDER: str = "unconfigured"
+    # Automatic provider failover (Section 46): when the primary provider
+    # errors (quota, auth, retired model, network), the system retries the
+    # next CONFIGURED provider instead of failing the task.
+    AI_FAILOVER_ENABLED: bool = True
     AI_MODEL: str = ""  # empty = provider default (see ai_providers.DEFAULT_MODELS)
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""

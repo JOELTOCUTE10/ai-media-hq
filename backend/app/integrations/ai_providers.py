@@ -3,11 +3,14 @@
 Providers raise ProviderNotConfiguredError when credentials are missing -
 the system NEVER fabricates a successful completion (rule: no fake results).
 """
+import logging
 from dataclasses import dataclass
 
 import httpx
 
 from app.core.config import get_settings
+
+logger = logging.getLogger("aihq.ai")
 
 
 class ProviderNotConfiguredError(RuntimeError):
@@ -20,6 +23,7 @@ class Completion:
     model: str
     prompt_tokens: int
     completion_tokens: int
+    provider: str = "unknown"  # provider that actually served this completion
 
 
 class AIProvider:
@@ -43,11 +47,16 @@ class OpenAICompatibleProvider(AIProvider):
     Never fabricates success: missing keys raise ProviderNotConfiguredError."""
     TIMEOUT = 120.0
 
-    def __init__(self, base_url: str, key_attr: str, provider_name: str, default_model: str):
+    def __init__(self, base_url: str, key_attr: str, provider_name: str, default_model: str,
+                 use_env_model: bool = True):
         self.name = provider_name
         self.base_url = base_url.rstrip("/")
         self.key_attr = key_attr
         self.default_model = default_model
+        # use_env_model: the PRIMARY provider honors AI_MODEL. Failover
+        # candidates ignore it - a gemini model name would 404 on groq, so
+        # each fallback runs on its own known-good default model.
+        self.use_env_model = use_env_model
 
     # Minimum-length sanity check only. Google issues Gemini keys in at least
     # two valid formats ("AIza..." legacy, and newer "AQ...." keys from AI
@@ -61,7 +70,7 @@ class OpenAICompatibleProvider(AIProvider):
     def _credentials(self) -> tuple[str, str]:
         settings = get_settings()
         api_key = getattr(settings, self.key_attr, "").strip()
-        model = settings.AI_MODEL or self.default_model
+        model = (settings.AI_MODEL or self.default_model) if self.use_env_model else self.default_model
         if not api_key:
             raise ProviderNotConfiguredError(
                 f"'{self.name}' provider selected but {self.key_attr} is not set. "
@@ -120,6 +129,7 @@ class OpenAICompatibleProvider(AIProvider):
             model=data.get("model", model),
             prompt_tokens=usage.get("prompt_tokens", 0),
             completion_tokens=usage.get("completion_tokens", 0),
+            provider=self.name,
         )
 
 
@@ -128,13 +138,16 @@ class AnthropicProvider(AIProvider):
     API_URL = "https://api.anthropic.com/v1/messages"
     TIMEOUT = 120.0
 
+    def __init__(self, use_env_model: bool = True):
+        self.use_env_model = use_env_model
+
     def complete(self, system: str, user: str, temperature: float = 0.4, max_tokens: int = 2000) -> Completion:
         settings = get_settings()
         if not settings.ANTHROPIC_API_KEY:
             raise ProviderNotConfiguredError(
                 "Anthropic provider selected but ANTHROPIC_API_KEY is not set. Add it to .env to enable agents."
             )
-        model = settings.AI_MODEL or DEFAULT_MODELS["anthropic"]
+        model = (settings.AI_MODEL or DEFAULT_MODELS["anthropic"]) if self.use_env_model else DEFAULT_MODELS["anthropic"]
         resp = httpx.post(
             self.API_URL,
             json={"model": model, "system": system,
@@ -154,6 +167,65 @@ class AnthropicProvider(AIProvider):
             model=data.get("model", model),
             prompt_tokens=usage.get("input_tokens", 0),
             completion_tokens=usage.get("output_tokens", 0),
+            provider=self.name,
+        )
+
+
+class FailoverProvider(AIProvider):
+    """Automatic provider failover (config: AI_FAILOVER_ENABLED, default on).
+
+    Tries the primary provider first; if it errors in any way that another
+    provider could survive (quota exhausted, auth revoked, model retired,
+    network timeout), the next CONFIGURED provider answers instead. The
+    primary keeps a hard guarantee: the system NEVER fabricates success -
+    if every provider in the chain fails, the last real error is raised.
+    Each fallback runs on its own known-good default model, so a
+    provider-specific AI_MODEL on the primary can not poison the chain.
+    """
+
+    name = "failover"
+
+    def __init__(self, chain: list[AIProvider]):
+        self.chain = chain
+        self.chain_names = [p.name for p in chain]
+
+    def _try(self, provider: AIProvider, system: str, user: str,
+             temperature: float, max_tokens: int) -> Completion:
+        return provider.complete(system, user, temperature=temperature, max_tokens=max_tokens)
+
+    def complete(self, system: str, user: str, temperature: float = 0.4, max_tokens: int = 2000) -> Completion:
+        last_error: Exception | None = None
+        for i, provider in enumerate(self.chain):
+            try:
+                completion = self._try(provider, system, user, temperature, max_tokens)
+                if i > 0:
+                    logger.warning(
+                        "AI failover: primary unavailable, %s answered", provider.name,
+                        extra={"primary": self.chain_names[0], "served_by": provider.name},
+                    )
+                logger.info(
+                    "AI completion served", extra={"provider": provider.name, "model": completion.model},
+                )
+                return completion
+            except ProviderNotConfiguredError as e:
+                # No credentials for this one - skip it, not an outage signal.
+                last_error = e
+                continue
+            except Exception as e:  # noqa: BLE001 - any provider error may be provider-specific
+                logger.warning(
+                    "AI provider %s failed: %s", provider.name, str(e)[:160],
+                    extra={"provider": provider.name},
+                )
+                last_error = e
+                continue
+        raise RuntimeError(
+            f"All AI providers failed ({' -> '.join(self.chain_names)}). "
+            f"Last error from '{self.chain_names[-1] if self.chain else 'none'}': {last_error}"
+        )
+
+    def test_connection(self) -> Completion:
+        return self.complete(
+            "You are a connection test.", "Say OK", temperature=0.0, max_tokens=256
         )
 
 
@@ -207,20 +279,63 @@ MODEL_PRICES: dict[str, tuple[float, float]] = {
 }
 
 
+def _configured_free_providers(settings) -> list[AIProvider]:
+    """All free-tier OpenAI-compatible providers that have credentials,
+    in fixed resilience order. Failover candidates run their OWN default
+    model (use_env_model=False) so the primary's AI_MODEL can not 404 them."""
+    chain: list[AIProvider] = []
+    for name in ("groq", "openrouter", "gemini", "mistral"):
+        base_url, key_attr, default_model = FREE_OPENAI_COMPATIBLE[name]
+        if getattr(settings, key_attr, "").strip():
+            chain.append(OpenAICompatibleProvider(base_url, key_attr, name, default_model,
+                                                  use_env_model=False))
+    return chain
+
+
+def _configured_paid_providers(settings) -> list[AIProvider]:
+    """Paid providers join the chain only if their keys are present."""
+    chain: list[AIProvider] = []
+    if settings.OPENAI_API_KEY.strip():
+        base = settings.OPENAI_BASE_URL or "https://api.openai.com/v1"
+        chain.append(OpenAICompatibleProvider(base, "OPENAI_API_KEY", "openai",
+                                              DEFAULT_MODELS["openai"], use_env_model=False))
+    if settings.ANTHROPIC_API_KEY.strip():
+        chain.append(AnthropicProvider(use_env_model=False))
+    return chain
+
+
+def _build_failover_chain(primary: AIProvider, primary_name: str, settings) -> AIProvider:
+    """Primary first, then every other configured provider. If only the
+    primary exists, return it unwrapped (nothing to fail over to)."""
+    candidates = _configured_free_providers(settings) + _configured_paid_providers(settings)
+    rest = [p for p in candidates if p.name != primary_name]
+    if not rest:
+        return primary
+    return FailoverProvider([primary] + rest)
+
+
 def get_ai_provider() -> AIProvider:
     settings = get_settings()
     name = settings.AI_PROVIDER.lower()
     if name in FREE_OPENAI_COMPATIBLE:
         base_url, key_attr, default_model = FREE_OPENAI_COMPATIBLE[name]
-        return OpenAICompatibleProvider(base_url, key_attr, name, default_model)
-    if name == "openai_compatible":
+        primary = OpenAICompatibleProvider(base_url, key_attr, name, default_model)
+    elif name == "openai_compatible":
         if not settings.OPENAI_BASE_URL:
             raise ProviderNotConfiguredError(
                 "openai_compatible selected but OPENAI_BASE_URL is not set. Point it at the endpoint's /v1 root."
             )
-        return OpenAICompatibleProvider(settings.OPENAI_BASE_URL, "OPENAI_API_KEY", name, DEFAULT_MODELS["openai"])
-    if name == "openai":
+        primary = OpenAICompatibleProvider(settings.OPENAI_BASE_URL, "OPENAI_API_KEY", name, DEFAULT_MODELS["openai"])
+    elif name == "openai":
         base = settings.OPENAI_BASE_URL or "https://api.openai.com/v1"
-        return OpenAICompatibleProvider(base, "OPENAI_API_KEY", "openai", DEFAULT_MODELS["openai"])
-    cls = PROVIDERS.get(name, UnconfiguredProvider)
-    return cls()
+        primary = OpenAICompatibleProvider(base, "OPENAI_API_KEY", "openai", DEFAULT_MODELS["openai"])
+    else:
+        cls = PROVIDERS.get(name, UnconfiguredProvider)
+        primary = cls()
+        if not settings.AI_FAILOVER_ENABLED:
+            return primary
+        if not (settings.AI_PROVIDER.strip().lower() in FREE_OPENAI_COMPATIBLE or name in PROVIDERS):
+            return primary
+    if not settings.AI_FAILOVER_ENABLED:
+        return primary
+    return _build_failover_chain(primary, primary.name, settings)

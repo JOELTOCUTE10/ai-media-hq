@@ -76,8 +76,13 @@ def test_ai_connection(user: User = Depends(get_current_user)):
     """Runs a tiny REAL completion against the configured provider.
     Never fakes success: returns the provider's own error text on failure."""
     try:
-        result = get_ai_provider().test_connection()
-        return {"status": "ok", "detail": f"Provider responded with model {result.model}."}
+        provider = get_ai_provider()
+        result = provider.test_connection()
+        chain_note = ""
+        if hasattr(provider, "chain_names") and len(provider.chain_names) > 1:
+            chain_note = f" (failover chain: {' -> '.join(provider.chain_names)})"
+        return {"status": "ok",
+                "detail": f"{result.provider} responded with model {result.model}.{chain_note}"}
     except ProviderNotConfiguredError as e:
         return {"status": "error", "detail": str(e)}
     except Exception as e:  # noqa: BLE001 - surface provider's own message verbatim

@@ -2,6 +2,21 @@
 
 Every integration is real and credential-gated. Nothing is simulated.
 
+
+## Automatic provider failover
+
+`AI_FAILOVER_ENABLED=true` (default) makes the system self-healing: if the
+primary provider fails for any reason - daily quota exhausted (429), revoked
+key (401/403), retired model (404), network timeout - the next **configured**
+provider answers instead, in this order: your `AI_PROVIDER` first, then
+groq, openrouter, gemini, mistral, then any paid keys on file. Each fallback
+runs on its own known-good default model, so a provider-specific `AI_MODEL`
+never breaks the chain. If every provider fails, the last real provider
+error is raised - the system never fabricates a completion.
+
+With `AI_PROVIDER=unconfigured`, any real key on file still serves the
+chain. Settings → Test AI provider shows the full chain and who answered.
+
 ## AI provider (required for agents to run)
 
 Set in `backend/.env`:
