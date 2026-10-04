@@ -1,5 +1,4 @@
-"""AI provider abstraction (Section 46).
-Agents never embed provider logic.
+"""AI provider abstraction (Section 46). Agents never embed provider logic.
 
 Providers raise ProviderNotConfiguredError when credentials are missing -
 the system NEVER fabricates a successful completion (rule: no fake results).
@@ -31,10 +30,9 @@ class AIProvider:
 
 
 class OpenAICompatibleProvider(AIProvider):
-    """Any OpenAI-compatible chat completions endpoint:
-    OpenAI itself or the free-tier providers (Groq, Mistral, OpenRouter, Gemini's compat layer).
-    Never fabricates success: missing keys raise ProviderNotConfiguredError.
-    """
+    """Any OpenAI-compatible chat completions endpoint: OpenAI itself or the
+    free-tier providers (Groq, Mistral, OpenRouter, Gemini's compat layer).
+    Never fabricates success: missing keys raise ProviderNotConfiguredError."""
     TIMEOUT = 120.0
 
     def __init__(self, base_url: str, key_attr: str, provider_name: str, default_model: str):
@@ -45,11 +43,11 @@ class OpenAICompatibleProvider(AIProvider):
 
     def _credentials(self) -> tuple[str, str]:
         settings = get_settings()
-        api_key = getattr(settings, self.key_attr, "").strip()
+        api_key = getattr(settings, self.key_attr, "")
         model = settings.AI_MODEL or self.default_model
         if not api_key:
             raise ProviderNotConfiguredError(
-                f"{self.name} provider selected but {self.key_attr} is not set. "
+                f"'{self.name}' provider selected but {self.key_attr} is not set. "
                 f"Add it to .env (get a free key, see docs/INTEGRATIONS.md)."
             )
         return api_key, model
@@ -62,12 +60,15 @@ class OpenAICompatibleProvider(AIProvider):
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
-        resp = httpx.post(
-            f"{self.base_url}/chat/completions",
-            json=payload,
-            headers={"Authorization": f"Bearer {api_key}"},
-            timeout=self.TIMEOUT)
-        resp.raise_for_status()
+        resp = httpx.post(f"{self.base_url}/chat/completions", json=payload,
+                          headers={"Authorization": f"Bearer {api_key}"},
+                          timeout=self.TIMEOUT)
+        if resp.status_code >= 400:
+            # Surface the provider's own explanation (e.g. Google's 404
+            # "model not found") instead of a bare status code.
+            raise RuntimeError(
+                f"'{self.name}' API error {resp.status_code} from {self.base_url}: {resp.text[:300]}"
+            )
         data = resp.json()
         usage = data.get("usage", {})
         return Completion(
@@ -98,7 +99,10 @@ class AnthropicProvider(AIProvider):
             headers={"x-api-key": settings.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01"},
             timeout=self.TIMEOUT,
         )
-        resp.raise_for_status()
+        if resp.status_code >= 400:
+            raise RuntimeError(
+                f"'anthropic' API error {resp.status_code}: {resp.text[:300]}"
+            )
         data = resp.json()
         usage = data.get("usage", {})
         return Completion(
@@ -114,13 +118,13 @@ class UnconfiguredProvider(AIProvider):
 
     def complete(self, system: str, user: str, temperature: float = 0.4, max_tokens: int = 2000) -> Completion:
         raise ProviderNotConfiguredError(
-            "No AI provider configured. Set AI_PROVIDER in .env: openai|anthropic|groq|mistral|openrouter|gemini|openai_compatible "
-            "(groq/mistral/openrouter/gemini have free tiers - see docs/INTEGRATIONS.md)."
+            "No AI provider configured. Set AI_PROVIDER in .env: openai|anthropic|groq|mistral|openrouter|gemini|openai_compatible (groq/mistral/openrouter/gemini have free tiers - see docs/INTEGRATIONS.md)."
         )
 
 
 class FakeProvider(AIProvider):
     """Deterministic provider for TESTS ONLY. Never used in production configuration."""
+
     name = "fake"
 
     def complete(self, system: str, user: str, temperature: float = 0.4, max_tokens: int = 2000) -> Completion:

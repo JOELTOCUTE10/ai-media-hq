@@ -84,6 +84,9 @@ def test_completion_hits_configured_endpoint(prov, monkeypatch):
     calls = {}
 
     class _Resp:
+        status_code = 200
+        text = ""
+
         def raise_for_status(self):
             return None
 
@@ -116,3 +119,19 @@ def test_unconfigured_message_lists_free_options(monkeypatch):
 def test_default_models_table_complete():
     for name in ("openai", "anthropic", *FREE_OPENAI_COMPATIBLE):
         assert DEFAULT_MODELS[name]
+
+
+def test_upstream_error_body_is_surfaced(prov, monkeypatch):
+    """A 404 from the provider must surface Google's own explanation,
+    not a bare status code the user can't act on."""
+    import httpx
+    s = prov("gemini")
+    monkeypatch.setattr(s, "GEMINI_API_KEY", "real-looking-key")
+
+    class _Resp:
+        status_code = 404
+        text = '{"error": {"message": "models/gemini-bogus is not found", "status": "NOT_FOUND"}}'
+
+    monkeypatch.setattr(httpx, "post", lambda url, **kw: _Resp())
+    with pytest.raises(RuntimeError, match="gemini-bogus"):
+        get_ai_provider().complete("system", "user")
