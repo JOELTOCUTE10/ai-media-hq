@@ -163,25 +163,39 @@ def test_api_key_whitespace_is_stripped(prov, monkeypatch):
     assert seen["auth"] == "Bearer real-key-with-spaces"
 
 
-def test_wrong_key_shape_caught_before_api_call(prov, monkeypatch):
-    """A key that isn't shaped like a Gemini key (AIza...) must be rejected
-    with an actionable message BEFORE wasting a request - Joel's 404 case."""
+def test_truncated_key_caught_before_api_call(prov, monkeypatch):
+    """A key copied from a UI that visibly truncated it ('...') must be
+    rejected with an actionable message BEFORE wasting a request."""
     import httpx
     s = prov("gemini")
-    monkeypatch.setattr(s, "GEMINI_API_KEY", "Ab8Rwrongkey" * 4)  # 48 chars, wrong prefix
+    monkeypatch.setattr(s, "GEMINI_API_KEY", "AQ.Ab8RN6J52k7TpXvK6HU18xW6GQOocnYyDx...")
     called = []
     monkeypatch.setattr(httpx, "post", lambda *a, **kw: called.append(1))
-    with pytest.raises(ProviderNotConfiguredError, match="AIza"):
+    with pytest.raises(ProviderNotConfiguredError, match="truncated"):
         get_ai_provider().complete("s", "u")
-    assert not called, "must not hit the API with a malformed key"
+    assert not called, "must not hit the API with a truncated key"
 
 
-def test_correct_key_shape_passes_validation(prov, monkeypatch):
+def test_too_short_key_caught_before_api_call(prov, monkeypatch):
     import httpx
     s = prov("gemini")
-    monkeypatch.setattr(s, "GEMINI_API_KEY", "AIza" + "x" * 35)
-    monkeypatch.setattr(httpx, "post", lambda *a, **kw: type("R", (), {
-        "status_code": 200, "text": "",
-        "json": lambda self: {"choices": [{"message": {"content": "ok"}}], "model": "m",
-                              "usage": {}}})())
-    get_ai_provider().complete("s", "u")  # no exception = shape accepted
+    monkeypatch.setattr(s, "GEMINI_API_KEY", "short")
+    called = []
+    monkeypatch.setattr(httpx, "post", lambda *a, **kw: called.append(1))
+    with pytest.raises(ProviderNotConfiguredError, match="too short"):
+        get_ai_provider().complete("s", "u")
+    assert not called
+
+
+def test_full_length_key_of_either_known_format_passes_validation(prov, monkeypatch):
+    """Google issues BOTH legacy 'AIza...' and newer 'AQ....' Gemini keys -
+    neither prefix should be rejected, only truncation/too-short."""
+    import httpx
+    s = prov("gemini")
+    for key in ("AIza" + "x" * 35, "AQ.Ab8RN6J52k7TpXvK6HU18xW6GQOocnYyDxZZZZZZZZZZZZ"):
+        monkeypatch.setattr(s, "GEMINI_API_KEY", key)
+        monkeypatch.setattr(httpx, "post", lambda *a, **kw: type("R", (), {
+            "status_code": 200, "text": "",
+            "json": lambda self: {"choices": [{"message": {"content": "ok"}}], "model": "m",
+                                  "usage": {}}})())
+        get_ai_provider().complete("s", "u")  # no exception = accepted

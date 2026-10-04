@@ -46,11 +46,13 @@ class OpenAICompatibleProvider(AIProvider):
         self.key_attr = key_attr
         self.default_model = default_model
 
-    # Strict shape check only where a wrong key produces a CRYPTIC upstream
-    # error (Gemini 404 "not found" instead of "invalid key"). Other providers
-    # reject bad keys with clear messages we already surface verbatim.
-    KEY_SHAPES = {
-        "gemini": ("AIza", 39, "https://aistudio.google.com/app/apikey"),
+    # Minimum-length sanity check only. Google issues Gemini keys in at least
+    # two valid formats ("AIza..." legacy, and newer "AQ...." keys from AI
+    # Studio) so we must NOT hard-match a prefix - that previously rejected
+    # genuine keys. The real failure mode worth catching is a key copied
+    # from a UI that TRUNCATED it with a trailing "..." (visibly too short).
+    MIN_KEY_LEN = {
+        "gemini": (20, "https://aistudio.google.com/app/apikey"),
     }
 
     def _credentials(self) -> tuple[str, str]:
@@ -62,18 +64,20 @@ class OpenAICompatibleProvider(AIProvider):
                 f"'{self.name}' provider selected but {self.key_attr} is not set. "
                 f"Add it to .env (get a free key, see docs/INTEGRATIONS.md)."
             )
-        shape = self.KEY_SHAPES.get(self.name)
-        if shape and shape[0]:
-            prefix, expected_len, key_url = shape
-            bad_prefix = not api_key.startswith(prefix)
-            bad_len = expected_len and not (expected_len - 5 <= len(api_key) <= expected_len + 10)
-            if bad_prefix or bad_len:
-                raise ProviderNotConfiguredError(
-                    f"{self.key_attr} does not look like a real {self.name} key: "
-                    f"it should start with '{prefix}' and be ~{expected_len} characters. "
-                    f"Yours starts with '{api_key[:4]}' and is {len(api_key)} characters - "
-                    f"the wrong value was probably copied. Create a fresh key at {key_url}"
-                )
+        if api_key.endswith("...") or "…" in api_key:
+            raise ProviderNotConfiguredError(
+                f"{self.key_attr} looks truncated (ends with '...'). You likely copied "
+                f"the shortened on-screen display instead of using the copy-icon button, "
+                f"which copies the full key. Re-copy the full key from "
+                f"{self.MIN_KEY_LEN.get(self.name, (None, 'the provider dashboard'))[1]}"
+            )
+        min_len = self.MIN_KEY_LEN.get(self.name)
+        if min_len and len(api_key) < min_len[0]:
+            raise ProviderNotConfiguredError(
+                f"{self.key_attr} is only {len(api_key)} characters - too short to be a "
+                f"real {self.name} key. Get the full key (use the copy-icon button, not "
+                f"manual selection) at {min_len[1]}"
+            )
         return api_key, model
 
     def complete(self, system: str, user: str, temperature: float = 0.4, max_tokens: int = 2000) -> Completion:
