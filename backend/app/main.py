@@ -99,3 +99,26 @@ for module in _routers:
 @app.get("/api/health", tags=["system"])
 def health():
     return {"status": "ok", "environment": settings.ENVIRONMENT, "ai_provider": settings.AI_PROVIDER}
+
+
+# Single-service UI: when the Docker image ships the compiled frontend in
+# /app/static, serve it from the same origin as the API. API routes are
+# registered above, so this catch-all only serves what is left.
+from pathlib import Path as _P  # noqa: E402
+
+from fastapi.responses import FileResponse as _FileResponse  # noqa: E402
+from fastapi.staticfiles import StaticFiles  # noqa: E402
+
+_STATIC_DIR = _P(__file__).resolve().parent.parent / "static"
+if _STATIC_DIR.is_dir():
+    app.mount("/assets", StaticFiles(directory=_STATIC_DIR / "assets"), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa(full_path: str):  # noqa: ANN201
+        if full_path.startswith("api/") or full_path == "api":
+            from fastapi import HTTPException as _HTTPException
+            raise _HTTPException(status_code=404, detail="Not Found")
+        index = _STATIC_DIR / "index.html"
+        if full_path and (_STATIC_DIR / full_path).is_file():
+            return _FileResponse(_STATIC_DIR / full_path)
+        return _FileResponse(index)
