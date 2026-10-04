@@ -22,6 +22,7 @@ class AgentOut(BaseModel):
     name: str
     role: str
     description: str
+    persona: str = ""
     department: str
     capabilities: list
     tools: list
@@ -52,6 +53,7 @@ class RunOut(BaseModel):
 def _to_out(agent: Agent) -> AgentOut:
     return AgentOut(
         id=agent.id, key=agent.key, name=agent.name, role=agent.role, description=agent.description,
+                    persona=agent.persona,
         department=agent.department, capabilities=agent.capabilities, tools=agent.tools,
         permission_level=agent.permission_level,
         permissions=sorted(LEVEL_PERMISSIONS.get(agent.permission_level, set())),

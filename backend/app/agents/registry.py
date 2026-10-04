@@ -195,3 +195,12 @@ DEPARTMENTS = ["executive", "intelligence", "creative", "production", "quality",
 
 def get_agent_def(key: str) -> AgentDef | None:
     return next((a for a in AGENTS if a["key"] == key), None)
+
+
+# --- The Agency-style dossiers (app/agents/personas/) ---
+# Every agent carries a full specialist dossier that becomes the core of
+# its system prompt - identity, mission, critical rules, workflow, voice.
+from app.agents.personas import render_dossier  # noqa: E402
+
+for _a in AGENTS:
+    _a["persona"] = render_dossier(_a["key"], _a["name"], _a["role"], _a["department"])

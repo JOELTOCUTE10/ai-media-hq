@@ -45,6 +45,22 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    from app.agents.registry import AGENTS
+    from app.db.session import SessionLocal
+    from app.models.agent import Agent as AgentModel
+    # Backfill: give existing orgs the full Agency-style dossiers the same
+    # way new orgs get them at seed time. Idempotent: only fills empty ones.
+    try:
+        with SessionLocal() as db:
+            personas = {a["key"]: a.get("persona", "") for a in AGENTS}
+            legacy = db.query(AgentModel).filter(AgentModel.persona == "").all()
+            for agent in legacy:
+                agent.persona = personas.get(agent.key, "")
+            if legacy:
+                db.commit()
+                logger.info("agent personas backfilled", extra={"count": len(legacy)})
+    except Exception:  # noqa: BLE001
+        logger.exception("persona backfill failed", extra={"error": "persona_backfill"})
     runner = None
     if settings.TASK_RUNNER_ENABLED:
         from app.services.task_runner import runner_loop

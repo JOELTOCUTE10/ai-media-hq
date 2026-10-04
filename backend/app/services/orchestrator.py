@@ -129,8 +129,20 @@ class Orchestrator:
 
         context = memory_service.build_agent_context(self.db, task, agent)
         channel = self.db.get(Channel, task.channel_id) if task.channel_id else None
-        system = (f"You are {agent.name}, the {agent.role} in an AI media company. {agent.description} "
-                  f"Respond with a structured, actionable result for the assigned task.")
+        # The Agency-style dossier is the core of the prompt; personality,
+        # rules and workflow actually shape the output. Fallback for legacy
+        # agents without a persona keeps behavior identical.
+        if agent.persona:
+            system = (
+                f"{agent.persona}\n\n"
+                "You operate inside an AI media company that produces YouTube Shorts. "
+                "Follow your Critical Rules and Workflow sections. Stay in character: your "
+                "Communication Style is how you always write. "
+                "Respond with a structured, actionable result for the assigned task."
+            )
+        else:
+            system = (f"You are {agent.name}, the {agent.role} in an AI media company. {agent.description} "
+                      f"Respond with a structured, actionable result for the assigned task.")
         user = f"TASK: {task.title}\n\nDETAILS:\n{task.description or '(none)'}\n\nCONTEXT:\n{context or '(none)'}"
         if channel:
             user += f"\n\nCHANNEL: {channel.name} ({channel.niche}). Audience: {channel.audience}"

@@ -6,6 +6,7 @@ export default function Agents() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [department, setDepartment] = useState("");
   const [error, setError] = useState("");
+  const [openDossier, setOpenDossier] = useState<number | null>(null);
 
   async function load() {
     try {
@@ -53,7 +54,28 @@ export default function Agents() {
               <span className="badge accent">{a.permission_level}</span>
               {a.tools.slice(0, 3).map((t) => <span className="badge" key={t}>{t}</span>)}
             </div>
-            <button onClick={() => toggle(a)}>{a.status === "active" ? "Pause" : "Resume"}</button>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <button onClick={() => toggle(a)}>{a.status === "active" ? "Pause" : "Resume"}</button>
+              {a.persona ? (
+                <button className="ghost" onClick={() => setOpenDossier(openDossier === a.id ? null : a.id)}>
+                  {openDossier === a.id ? "Hide dossier" : "Dossier"}
+                </button>
+              ) : null}
+            </div>
+            {openDossier === a.id && a.persona ? (
+              <div className="dossier fade-up">
+                {a.persona.split(/\n## /).slice(1).map((section) => {
+                  const [head, ...body] = section.split("\n");
+                  const title = head.replace(/^[^a-zA-Z]*/, "");
+                  return (
+                    <div key={title} style={{ marginTop: 8 }}>
+                      <div className="dossier-section">{title}</div>
+                      <div className="dossier-body">{body.join("\n").trim()}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
         ))}
       </div>

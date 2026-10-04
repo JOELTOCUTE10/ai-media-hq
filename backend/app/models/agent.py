@@ -18,6 +18,7 @@ class Agent(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(200))
     role: Mapped[str] = mapped_column(String(200))
     description: Mapped[str] = mapped_column(Text, default="")
+    persona: Mapped[str] = mapped_column(Text, default="")
     department: Mapped[str] = mapped_column(String(100), index=True)
     capabilities: Mapped[list] = mapped_column(JSON, default=list)
     tools: Mapped[list] = mapped_column(JSON, default=list)

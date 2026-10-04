@@ -217,3 +217,43 @@ def test_execute_task_self_assigns_when_no_agent(db, org_row):
     assert result.assigned_agent_id is not None, "task must self-assign instead of failing"
     db.refresh(result)
     assert result.status != "failed" or "no active agent" in (result.error or "")
+
+
+def test_every_agent_has_a_dossier():
+    from app.agents.personas import PERSONAS
+    from app.agents.registry import AGENTS
+    assert len(PERSONAS) == 33
+    for a in AGENTS:
+        assert a.get("persona"), f"{a['key']} missing dossier"
+        p = a["persona"]
+        assert "## Critical Rules" in p and "## Workflow" in p
+        assert a["key"] in PERSONAS
+        assert len(p) > 800, f"{a['key']} dossier too thin"
+
+
+def test_dossiers_are_distinct():
+    from app.agents.personas import PERSONAS
+    vibes = {p["vibe"] for p in PERSONAS.values()}
+    assert len(vibes) == len(PERSONAS), "every agent needs a unique vibe"
+
+
+def test_orchestrator_uses_dossier_as_system_prompt(db, org_row):
+    from app.services.orchestrator import Orchestrator
+    task = Task(org_id=org_row.id, title="Summarize today's most important AI news",
+                description="brief summary", status="queued")
+    db.add(task)
+    db.commit()
+    captured = {}
+
+    class ProbeProvider:
+        name = "probe"
+        def complete(self, system, user, temperature=0.4, max_tokens=2000):
+            captured["system"] = system
+            from app.integrations.ai_providers import Completion
+            return Completion(text="done", model="probe", prompt_tokens=1, completion_tokens=1)
+
+    result = Orchestrator(db, provider=ProbeProvider()).execute_task(task.id)
+    db.refresh(result)
+    sys_prompt = captured["system"]
+    assert "## Critical Rules" in sys_prompt, "dossier must drive the system prompt"
+    assert "Communication Style" in sys_prompt

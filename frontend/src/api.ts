@@ -50,7 +50,7 @@ export interface Channel {
   content_rules: Record<string, unknown>; publishing_rules: Record<string, unknown>;
 }
 export interface Agent {
-  id: number; key: string; name: string; role: string; description: string; department: string;
+  id: number; key: string; name: string; role: string; description: string; persona?: string; department: string;
   capabilities: string[]; tools: string[]; permission_level: string; permissions: string[];
   status: string; current_task_id: number | null;
 }

@@ -98,7 +98,8 @@ def seed_org(db: Session, org_id: int) -> None:
     for a in AGENTS:
         agent = Agent(
             org_id=org_id, key=a["key"], name=a["name"], role=a["role"],
-            description=a["description"], department=a["department"],
+            description=a["description"], persona=a.get("persona", ""),
+            department=a["department"],
             capabilities=a["capabilities"], tools=a["tools"],
             permission_level=a["permission_level"],
             model_config_json={"model": settings.AI_MODEL, "temperature": 0.4},
