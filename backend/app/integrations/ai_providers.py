@@ -99,8 +99,21 @@ class OpenAICompatibleProvider(AIProvider):
             )
         data = resp.json()
         usage = data.get("usage", {})
+        choices = data.get("choices") or []
+        message = (choices[0].get("message") or {}) if choices else {}
+        text = message.get("content")
+        if not text and message.get("refusal"):
+            raise RuntimeError(f"'{self.name}' refused the request: {message['refusal'][:200]}")
+        if not text:
+            # 200 but no usable content: surface the real provider payload
+            # instead of crashing with a cryptic KeyError.
+            raise RuntimeError(
+                f"'{self.name}' returned no content (finish_reason="
+                f"{choices[0].get('finish_reason') if choices else 'unknown'}): "
+                f"{str(data)[:300]}"
+            )
         return Completion(
-            text=data["choices"][0]["message"]["content"],
+            text=text,
             model=data.get("model", model),
             prompt_tokens=usage.get("prompt_tokens", 0),
             completion_tokens=usage.get("completion_tokens", 0),

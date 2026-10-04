@@ -87,6 +87,15 @@ async def runner_loop(interval: float) -> None:
     settings = get_settings()
     initiative_every = max(float(settings.INITIATIVE_INTERVAL_SECONDS), interval)
     while True:
+        # Auto-assign first: queued tasks must be routed to an agent
+        # before the executor can pick them up.
+        try:
+            with SessionLocal() as db:
+                orgs = db.query(Organization).all()
+                for org in orgs:
+                    auto_assign_queued(db, org)
+        except Exception:  # noqa: BLE001
+            logger.exception("auto-assign failed", extra={"error": "auto_assign"})
         try:
             run_ready_tasks()
         except Exception:  # noqa: BLE001
@@ -96,16 +105,9 @@ async def runner_loop(interval: float) -> None:
                 await asyncio.to_thread(publishing_scheduled, db)
         except Exception:  # noqa: BLE001
             logger.exception("publishing scheduler failed", extra={"error": "publishing_scheduler"})
-        # Agent initiative: auto-route unassigned work every tick, propose
-        # new work on the configured cadence. All guarded by org settings
-        # and the operations kill switch inside the service.
-        try:
-            with SessionLocal() as db:
-                orgs = db.query(Organization).all()
-                for org in orgs:
-                    auto_assign_queued(db, org)
-        except Exception:  # noqa: BLE001
-            logger.exception("auto-assign failed", extra={"error": "auto_assign"})
+        # Agent initiative: idle agents propose new work on the configured
+        # cadence. Guarded by org settings and the operations kill switch
+        # inside the service.
         if runner_loop._ticks * interval >= initiative_every or runner_loop._ticks == 0:
             try:
                 with SessionLocal() as db:

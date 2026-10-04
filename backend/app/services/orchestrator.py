@@ -77,7 +77,18 @@ class Orchestrator:
             return self._fail(task, "Operations are paused (global kill switch). Resume from Settings.", blocked=True)
 
         if task.assigned_agent_id is None:
-            return self._fail(task, "Task has no assigned agent. Assign one before running.")
+            # Self-organizing org: route the task to the best-fit active
+            # agent instead of failing. If no agent exists, fail honestly.
+            from app.services.initiative_service import _pick_agent
+            agent = _pick_agent(self.db, task.org_id, task)
+            if agent is None:
+                return self._fail(task, "Task has no assigned agent and no active agent "
+                                        "is available to self-assign it. Add/activate agents first.")
+            task.assigned_agent_id = agent.id
+            self.db.commit()
+            publish(self.db, EventType.TASK_AUTO_ASSIGNED,
+                    {"task": task.title, "agent": agent.name},
+                    org_id=task.org_id, task_id=task.id, agent_id=agent.id)
 
         agent = self.db.get(Agent, task.assigned_agent_id)
         if agent is None:

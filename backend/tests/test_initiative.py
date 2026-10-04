@@ -204,3 +204,16 @@ def test_suggestion_events_published(db, org_row):
     generate_suggestions(db, org_row, provider=provider, force=True)
     after = db.query(SystemEvent).filter_by(event_type=EventType.SUGGESTION_CREATED).count()
     assert after > before
+
+
+def test_execute_task_self_assigns_when_no_agent(db, org_row):
+    """The core autonomy fix: an unassigned task must route itself, not fail."""
+    from app.services.orchestrator import Orchestrator
+    task = Task(org_id=org_row.id, title="Find current AI trends in video content",
+                description="web research", status="queued")
+    db.add(task)
+    db.commit()
+    result = Orchestrator(db).execute_task(task.id)
+    assert result.assigned_agent_id is not None, "task must self-assign instead of failing"
+    db.refresh(result)
+    assert result.status != "failed" or "no active agent" in (result.error or "")
