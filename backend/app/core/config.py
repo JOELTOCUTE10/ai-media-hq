@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     # Background task runner
     TASK_RUNNER_ENABLED: bool = True
     TASK_POLL_INTERVAL_SECONDS: float = 2.0
+    # Agent initiative: idle agents propose work on this cadence.
+    INITIATIVE_INTERVAL_SECONDS: float = 900.0  # 15 minutes
+    # Cost guards: per-agent proposal caps per initiative pass/day.
+    INITIATIVE_AGENTS_PER_PASS: int = 3
+    INITIATIVE_MAX_PER_AGENT_PER_DAY: int = 3
     MAX_AGENT_RETRIES: int = 2
 
     # AI provider: openai | anthropic | fake (tests) | unconfigured

@@ -37,6 +37,7 @@ export const NAV: { group: string; items: { to: string; label: string }[] }[] = 
       { to: "/channels", label: "Channels" },
       { to: "/agents", label: "Agents" },
       { to: "/tasks", label: "Tasks" },
+      { to: "/suggestions", label: "Initiative" },
     ],
   },
   {

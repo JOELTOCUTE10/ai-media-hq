@@ -26,12 +26,13 @@ from app.api.routers import (
     reports,
     research,
     scripts,
+    suggestions,
     tasks,
     trends,
 )
 from app.api.routers import (
     settings as settings_router,
-)
+)  # noqa: F401
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.db.init_db import init_db
@@ -73,7 +74,8 @@ app.add_middleware(
 
 _routers = (auth, channels, agents, tasks, events, memory, research, trends,
             dashboard, settings_router, approvals, knowledge, ideas, scripts, qc,
-            production, publishing, analytics, experiments, costs, reports, founder)
+            production, publishing, analytics, experiments, costs, reports,
+            founder, suggestions)
 for module in _routers:
     app.include_router(module.router)
 

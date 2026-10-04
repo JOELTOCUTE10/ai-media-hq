@@ -4,6 +4,7 @@ from app.models.agent import Agent, AgentMessage, AgentPermission, AgentRun  # n
 from app.models.analytics import AnalyticsSnapshot, Experiment, ExperimentResult, LearningInsight  # noqa: F401
 from app.models.channel import Channel  # noqa: F401
 from app.models.content import Claim, ContentIdea, Script, ScriptVersion  # noqa: F401
+from app.models.initiative import AgentSuggestion  # noqa: F401
 from app.models.knowledge import KnowledgeEntity, KnowledgeRelationship, Memory  # noqa: F401
 from app.models.ops import AuditLog, CostRecord, Integration, Schedule, SystemEvent  # noqa: F401
 from app.models.organization import Organization, User  # noqa: F401

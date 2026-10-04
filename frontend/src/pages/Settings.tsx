@@ -21,7 +21,7 @@ export default function SettingsPage() {
   }
   useEffect(() => { load(); }, []);
 
-  async function toggle(key: "operations_paused" | "publishing_paused" | "auto_publish") {
+  async function toggle(key: "operations_paused" | "publishing_paused" | "auto_publish" | "agent_initiative" | "auto_approve_suggestions") {
     if (!data) return;
     const next = !data.organization.settings[key];
     try {
@@ -40,6 +40,8 @@ export default function SettingsPage() {
     ["operations_paused", "Pause all agents (kill switch)", "Blocks every task execution immediately."],
     ["publishing_paused", "Publishing paused", "No content can be published while on."],
     ["auto_publish", "Automatic publishing", "Off = every video needs human approval first."],
+    ["agent_initiative", "Agent initiative", "Idle agents propose their own next task (capped 3/day each)."],
+    ["auto_approve_suggestions", "Auto-approve suggestions", "Full autonomy: agents queue their own proposals without review."],
   ];
 
   return (

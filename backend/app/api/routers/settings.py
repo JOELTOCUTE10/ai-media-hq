@@ -20,6 +20,9 @@ class SettingsIn(BaseModel):
     publishing_paused: bool | None = None
     auto_publish: bool | None = None
     monthly_budget_usd: float | None = Field(default=None, ge=0)
+    # Agent initiative: agents self-propose work; auto-approve = full autonomy
+    agent_initiative: bool | None = None
+    auto_approve_suggestions: bool | None = None
 
 
 def _org_settings(db: Session, org: Organization) -> dict:

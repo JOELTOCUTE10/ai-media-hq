@@ -7,6 +7,7 @@ import CommandCenter from "./pages/CommandCenter";
 import Channels from "./pages/Channels";
 import Agents from "./pages/Agents";
 import Tasks from "./pages/Tasks";
+import Suggestions from "./pages/Suggestions";
 import SettingsPage from "./pages/Settings";
 import MemoryPage from "./pages/Memory";
 import Research from "./pages/Research";
@@ -71,6 +72,7 @@ export default function App() {
               <Route path="/channels" element={<Channels />} />
               <Route path="/agents" element={<Agents />} />
               <Route path="/tasks" element={<Tasks />} />
+              <Route path="/suggestions" element={<Suggestions />} />
               <Route path="/memory" element={<MemoryPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/research" element={<Research />} />

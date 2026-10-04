@@ -82,6 +82,10 @@ def publishing_scheduled(db) -> int:
 
 async def runner_loop(interval: float) -> None:
     logger.info("task runner started", extra={"status": "started"})
+    from app.core.config import get_settings
+    from app.services.initiative_service import auto_assign_queued, generate_suggestions
+    settings = get_settings()
+    initiative_every = max(float(settings.INITIATIVE_INTERVAL_SECONDS), interval)
     while True:
         try:
             run_ready_tasks()
@@ -92,4 +96,27 @@ async def runner_loop(interval: float) -> None:
                 await asyncio.to_thread(publishing_scheduled, db)
         except Exception:  # noqa: BLE001
             logger.exception("publishing scheduler failed", extra={"error": "publishing_scheduler"})
+        # Agent initiative: auto-route unassigned work every tick, propose
+        # new work on the configured cadence. All guarded by org settings
+        # and the operations kill switch inside the service.
+        try:
+            with SessionLocal() as db:
+                orgs = db.query(Organization).all()
+                for org in orgs:
+                    auto_assign_queued(db, org)
+        except Exception:  # noqa: BLE001
+            logger.exception("auto-assign failed", extra={"error": "auto_assign"})
+        if runner_loop._ticks * interval >= initiative_every or runner_loop._ticks == 0:
+            try:
+                with SessionLocal() as db:
+                    orgs = db.query(Organization).all()
+                    for org in orgs:
+                        generate_suggestions(db, org)
+            except Exception:  # noqa: BLE001
+                logger.exception("initiative pass failed", extra={"error": "initiative"})
+            runner_loop._ticks = 0
+        runner_loop._ticks += 1
         await asyncio.sleep(interval)
+
+
+runner_loop._ticks = 0
