@@ -175,6 +175,7 @@ class Orchestrator:
 
                 task.status = "completed"
                 task.output = {"result": completion.text, "model": completion.model,
+                               "provider": completion.provider,
                                "tokens": completion.prompt_tokens + completion.completion_tokens}
                 task.completed_at = datetime.now(UTC)
                 task.error = None
