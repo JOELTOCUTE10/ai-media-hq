@@ -101,7 +101,7 @@ plus the matching key in `.env` - leave `AI_MODEL` empty for the default model.
 | `groq`        | console.groq.com/keys                      | openai/gpt-oss-20b       | 30 RPM, 1,000 requests/day  |
 | `mistral`     | console.mistral.ai/api-keys               | mistral-small-latest     | ~1 request/sec               |
 | `openrouter`  | openrouter.ai/keys (`:free` models)       | openai/gpt-oss-20b:free   | 20 RPM, 50 requests/day/model|
-| `gemini`      | aistudio.google.com/app/apikey             | gemini-2.5-flash         | 15-30 RPM, 1,500 requests/day|
+| `gemini`      | aistudio.google.com/app/apikey             | gemini-3.8-flash         | 15-30 RPM, 1,500 requests/day|
 
 Any other OpenAI-compatible endpoint (self-hosted vLLM, Ollama, LM Studio):
 `AI_PROVIDER=openai_compatible` + `OPENAI_BASE_URL` + `OPENAI_API_KEY`.
