@@ -38,7 +38,12 @@ export default function Login({ onAuthed }: { onAuthed: () => void }) {
   return (
     <div className="login-wrap">
       <div className="aurora a1" /><div className="aurora a2" /><div className="aurora a3" />
-      <form className="card login-card" onSubmit={submit}>
+      <div className="login-col">
+        <div className="login-hero">
+          <h2>Run your media company<span className="accent-i">.</span></h2>
+          <p>An autonomous team of AI agents researches, scripts, produces and publishes - you approve.</p>
+        </div>
+        <form className="card login-card" onSubmit={submit}>
         <div className="login-brand">
           <LogoMark size={56} />
           <div className="login-title">AI MEDIA <span className="hq">HQ</span></div>
@@ -69,6 +74,7 @@ export default function Login({ onAuthed }: { onAuthed: () => void }) {
           </a>
         </p>
       </form>
+      </div>
     </div>
   );
 }

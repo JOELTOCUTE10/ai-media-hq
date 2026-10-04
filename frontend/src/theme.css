@@ -377,3 +377,91 @@ button.primary:disabled { opacity: .6; cursor: default; }
 ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: #b9b9c0; }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* ============================================================
+   POLISH PASS v2 — feed, stat cards, topbar, login hero
+   ============================================================ */
+
+/* --- nav icons alignment --- */
+.nav-item svg { opacity: 0.75; }
+.nav-item.active svg, .nav-item:hover svg { opacity: 1; }
+
+/* --- stat cards --- */
+.stat-card .stat-title { display: flex; align-items: center; gap: 7px; }
+.stat-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 8px; color: var(--accent);
+  background: rgba(79, 70, 229, 0.08); border: 1px solid rgba(79, 70, 229, 0.14);
+  box-sizing: border-box;
+}
+
+/* --- humanized activity feed --- */
+.feed-item { align-items: center; }
+.feed-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: #a1a1aa; }
+.feed-dot.tone-ok { background: var(--ok); }
+.feed-dot.tone-bad { background: var(--bad); }
+.feed-dot.tone-warn { background: var(--warn); }
+.feed-dot.tone-accent { background: var(--accent); }
+.feed-label { font-weight: 600; font-size: 12px; color: var(--text); white-space: nowrap; }
+.feed-detail {
+  color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; flex: 1; min-width: 0;
+}
+.feed-time { color: #a1a1aa; font-size: 11px; white-space: nowrap; margin-left: auto; }
+
+/* --- recommendations list --- */
+.rec-item { display: flex; align-items: flex-start; gap: 9px; padding: 7px 0; font-size: 12.5px; line-height: 1.5; }
+.rec-item + .rec-item { border-top: 1px solid var(--border); }
+.rec-icon {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 22px; height: 22px; border-radius: 7px; margin-top: 1px;
+  background: rgba(79, 70, 229, 0.08); color: var(--accent);
+}
+
+/* --- integrations chips --- */
+.int-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.int-chip {
+  display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px;
+  border-radius: 999px; font-size: 12px; font-weight: 600;
+  background: rgba(21, 128, 61, 0.07); color: var(--ok); border: 1px solid rgba(21, 128, 61, 0.22);
+  text-transform: capitalize;
+}
+.int-chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+.int-chip.inert { background: var(--panel-2); color: var(--muted); border: 1px solid var(--border); font-weight: 500; }
+.int-chip.inert::before { background: #a1a1aa; }
+
+/* --- topbar --- */
+.topbar-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 999px;
+  padding: 5px 13px; font-size: 12px; color: var(--muted);
+  box-shadow: 0 1px 2px rgba(16, 16, 20, 0.04);
+}
+.pill-sep { width: 1px; height: 12px; background: var(--border); }
+.pill-provider { color: var(--accent); font-weight: 600; }
+.ghost-pill {
+  border-radius: 999px; background: var(--panel); border: 1px solid var(--border);
+  padding: 6px 14px; font-size: 12px; color: var(--muted); cursor: pointer;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+.ghost-pill:hover { border-color: rgba(79, 70, 229, .4); color: var(--text); background: var(--panel-2); }
+
+/* --- login hero --- */
+.login-col { display: flex; flex-direction: column; align-items: center; gap: 26px; z-index: 2; position: relative; }
+.login-hero { text-align: center; animation: fadeUp .6s both; max-width: 460px; }
+.login-hero h2 {
+  font-family: var(--serif); font-weight: 400; font-size: 34px;
+  margin: 0 0 10px; color: var(--text); letter-spacing: 0.01em;
+}
+.login-hero .accent-i { color: var(--accent); font-style: italic; }
+.login-hero p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+/* --- surprise me --- */
+.auto-pill.surprise {
+  cursor: pointer; color: var(--accent); font-weight: 600; background: rgba(79, 70, 229, 0.07);
+  border-color: rgba(79, 70, 229, 0.25);
+  transition: background .15s ease, border-color .15s ease, transform .12s var(--ease);
+}
+.auto-pill.surprise:hover { background: rgba(79, 70, 229, 0.12); border-color: rgba(79, 70, 229, 0.45); transform: translateY(-1px); }
+.auto-pill.surprise svg { animation: spinSlow 6s linear infinite; }
+@keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

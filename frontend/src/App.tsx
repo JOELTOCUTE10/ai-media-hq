@@ -38,14 +38,20 @@ function Layout() {
       <Sidebar />
       <main className="main">
         <div className="topbar">
-          <span style={{ color: "var(--muted)", fontSize: 12 }}>
+          <span className="topbar-pill">
             <span
               className="health-dot"
               style={{ background: health?.status === "ok" ? "var(--ok)" : "var(--bad)" }}
             />
-            {health ? `API online · AI provider: ${health.ai_provider}` : "API offline"}
+            {health ? (
+              <>
+                API online
+                {health.ai_provider ? <span className="pill-sep" /> : null}
+                {health.ai_provider ? <span className="pill-provider">{health.ai_provider} + failover</span> : null}
+              </>
+            ) : "API offline"}
           </span>
-          <button onClick={() => { clearToken(); window.location.hash = "#/login"; }}>Sign out</button>
+          <button className="ghost-pill" onClick={() => { clearToken(); window.location.hash = "#/login"; }}>Sign out</button>
         </div>
         <Outlet />
       </main>

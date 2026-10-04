@@ -7,6 +7,19 @@ interface Goal { id: number; title: string; description: string; status: string;
 interface GoalDetail extends Goal { tasks: { id: number; title: string; status: string; assigned_agent_id: number | null }[] }
 interface Channel { name: string; slug: string }
 
+const SAMPLE_GOALS = [
+  { title: "Grow the AI channel to 10,000 subscribers", description: "Focus on explainers about free AI tools. Publish 3 Shorts per week." },
+  { title: "Launch a second channel for soccer highlights", description: "Transformative clips format, publish daily, follow fair-use rules strictly." },
+  { title: "Turn this week's trend radar into 5 Shorts", description: "Use the top trends only if they fit our channels; skip anything risky." },
+  { title: "Cut production cost per video in half", description: "Audit the pipeline, find the slowest steps, propose concrete fixes." },
+];
+
+const Sparkle = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2z" />
+  </svg>
+);
+
 const ArrowUp = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 19V5M5 12l7-7 7 7" />
@@ -82,6 +95,13 @@ export default function FounderMode() {
             {channels.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
           </select>
           <input type="date" value={form.target_date} onChange={(e) => setForm({ ...form, target_date: e.target.value })} />
+          <button className="auto-pill surprise" type="button"
+            onClick={() => {
+              const g = SAMPLE_GOALS[Math.floor(Math.random() * SAMPLE_GOALS.length)];
+              setForm({ ...form, title: g.title, description: g.description });
+            }}>
+            <Sparkle /> Surprise me
+          </button>
           <button className="prompt-send" onClick={createGoal} disabled={!form.title.trim()}>
             <ArrowUp /> Create plan
           </button>
