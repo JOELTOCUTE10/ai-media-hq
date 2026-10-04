@@ -7,7 +7,7 @@ from app.api.deps import get_current_user, require_admin
 from app.core.config import get_settings
 from app.core.events import EventType
 from app.db.session import get_db
-from app.integrations.ai_providers import DEFAULT_MODELS
+from app.integrations.ai_providers import DEFAULT_MODELS, ProviderNotConfiguredError, get_ai_provider
 from app.models.ops import AuditLog, Integration
 from app.models.organization import Organization, User
 from app.services.event_bus import publish
@@ -61,3 +61,21 @@ def update_settings(data: SettingsIn, user: User = Depends(require_admin), db: S
                     else EventType.OPERATIONS_RESUMED, {key: updates[key]}, org_id=user.org_id)
     db.commit()
     return {"organization": {"id": org.id, "name": org.name, "settings": current}}
+
+
+class TestAIOut(BaseModel):
+    status: str = Field(description="ok | error")
+    detail: str
+
+
+@router.post("/test-ai", response_model=TestAIOut)
+def test_ai_connection(user: User = Depends(get_current_user)):
+    """Runs a tiny REAL completion against the configured provider.
+    Never fakes success: returns the provider's own error text on failure."""
+    try:
+        result = get_ai_provider().test_connection()
+        return {"status": "ok", "detail": f"Provider responded with model {result.model}."}
+    except ProviderNotConfiguredError as e:
+        return {"status": "error", "detail": str(e)}
+    except Exception as e:  # noqa: BLE001 - surface provider's own message verbatim
+        return {"status": "error", "detail": str(e)}

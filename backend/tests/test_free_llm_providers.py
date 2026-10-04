@@ -126,7 +126,7 @@ def test_upstream_error_body_is_surfaced(prov, monkeypatch):
     not a bare status code the user can't act on."""
     import httpx
     s = prov("gemini")
-    monkeypatch.setattr(s, "GEMINI_API_KEY", "real-looking-key")
+    monkeypatch.setattr(s, "GEMINI_API_KEY", "AIza" + "k" * 35)
 
     class _Resp:
         status_code = 404
@@ -161,3 +161,27 @@ def test_api_key_whitespace_is_stripped(prov, monkeypatch):
     monkeypatch.setattr(httpx, "post", fake_post)
     get_ai_provider().complete("s", "u")
     assert seen["auth"] == "Bearer real-key-with-spaces"
+
+
+def test_wrong_key_shape_caught_before_api_call(prov, monkeypatch):
+    """A key that isn't shaped like a Gemini key (AIza...) must be rejected
+    with an actionable message BEFORE wasting a request - Joel's 404 case."""
+    import httpx
+    s = prov("gemini")
+    monkeypatch.setattr(s, "GEMINI_API_KEY", "Ab8Rwrongkey" * 4)  # 48 chars, wrong prefix
+    called = []
+    monkeypatch.setattr(httpx, "post", lambda *a, **kw: called.append(1))
+    with pytest.raises(ProviderNotConfiguredError, match="AIza"):
+        get_ai_provider().complete("s", "u")
+    assert not called, "must not hit the API with a malformed key"
+
+
+def test_correct_key_shape_passes_validation(prov, monkeypatch):
+    import httpx
+    s = prov("gemini")
+    monkeypatch.setattr(s, "GEMINI_API_KEY", "AIza" + "x" * 35)
+    monkeypatch.setattr(httpx, "post", lambda *a, **kw: type("R", (), {
+        "status_code": 200, "text": "",
+        "json": lambda self: {"choices": [{"message": {"content": "ok"}}], "model": "m",
+                              "usage": {}}})())
+    get_ai_provider().complete("s", "u")  # no exception = shape accepted

@@ -23,6 +23,11 @@ class Completion:
 
 
 class AIProvider:
+    """Base: agents call complete(); Settings page calls test_connection()."""
+
+    def test_connection(self) -> Completion:
+        """Tiny real completion to verify credentials end-to-end."""
+        return self.complete("You are a connection test.", "Say OK", temperature=0.0, max_tokens=5)
     name = "abstract"
 
     def complete(self, system: str, user: str, temperature: float = 0.4, max_tokens: int = 2000) -> Completion:
@@ -41,6 +46,13 @@ class OpenAICompatibleProvider(AIProvider):
         self.key_attr = key_attr
         self.default_model = default_model
 
+    # Strict shape check only where a wrong key produces a CRYPTIC upstream
+    # error (Gemini 404 "not found" instead of "invalid key"). Other providers
+    # reject bad keys with clear messages we already surface verbatim.
+    KEY_SHAPES = {
+        "gemini": ("AIza", 39, "https://aistudio.google.com/app/apikey"),
+    }
+
     def _credentials(self) -> tuple[str, str]:
         settings = get_settings()
         api_key = getattr(settings, self.key_attr, "").strip()
@@ -50,6 +62,18 @@ class OpenAICompatibleProvider(AIProvider):
                 f"'{self.name}' provider selected but {self.key_attr} is not set. "
                 f"Add it to .env (get a free key, see docs/INTEGRATIONS.md)."
             )
+        shape = self.KEY_SHAPES.get(self.name)
+        if shape and shape[0]:
+            prefix, expected_len, key_url = shape
+            bad_prefix = not api_key.startswith(prefix)
+            bad_len = expected_len and not (expected_len - 5 <= len(api_key) <= expected_len + 10)
+            if bad_prefix or bad_len:
+                raise ProviderNotConfiguredError(
+                    f"{self.key_attr} does not look like a real {self.name} key: "
+                    f"it should start with '{prefix}' and be ~{expected_len} characters. "
+                    f"Yours starts with '{api_key[:4]}' and is {len(api_key)} characters - "
+                    f"the wrong value was probably copied. Create a fresh key at {key_url}"
+                )
         return api_key, model
 
     def complete(self, system: str, user: str, temperature: float = 0.4, max_tokens: int = 2000) -> Completion:

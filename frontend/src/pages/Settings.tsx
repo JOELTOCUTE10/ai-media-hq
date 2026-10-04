@@ -5,6 +5,16 @@ export default function SettingsPage() {
   const [data, setData] = useState<SettingsBundle | null>(null);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [aiTest, setAiTest] = useState<{ status: string; detail: string } | null>(null);
+
+  async function testAI() {
+    setTesting(true); setAiTest(null);
+    try {
+      setAiTest(await api<{ status: string; detail: string }>("/api/settings/test-ai", { method: "POST" }));
+    } catch (e: any) { setAiTest({ status: "error", detail: e.message }); }
+    setTesting(false);
+  }
 
   async function load() {
     try { setData(await api<SettingsBundle>("/api/settings")); } catch (e: any) { setError(e.message); }
@@ -66,8 +76,16 @@ export default function SettingsPage() {
             <span className="badge">{data.system.ai_model}</span>{" "}
             <span className={`badge ${data.system.task_runner_enabled ? "ok" : "warn"}`}>
               runner {data.system.task_runner_enabled ? "enabled" : "disabled"}
-            </span>
+            </span>{" "}
+            <button className="btn secondary" onClick={testAI} disabled={testing} style={{ marginLeft: 6 }}>
+              {testing ? "Testing..." : "Test AI provider"}
+            </button>
           </div>
+          {aiTest && (
+            <div className={aiTest.status === "ok" ? "ok-banner" : "error-banner"} style={{ marginBottom: 10, whiteSpace: "pre-wrap" }}>
+              {aiTest.detail}
+            </div>
+          )}
           <table>
             <thead><tr><th>Integration</th><th>Status</th></tr></thead>
             <tbody>
