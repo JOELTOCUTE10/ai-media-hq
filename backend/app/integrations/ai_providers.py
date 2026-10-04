@@ -27,7 +27,10 @@ class AIProvider:
 
     def test_connection(self) -> Completion:
         """Tiny real completion to verify credentials end-to-end."""
-        return self.complete("You are a connection test.", "Say OK", temperature=0.0, max_tokens=5)
+        # Thinking/reasoning models (e.g. Gemini 3.8 flash) consume tokens on
+        # internal reasoning BEFORE emitting any text - max_tokens=5 produced
+        # finish_reason=length with zero content. 256 is a safe floor.
+        return self.complete("You are a connection test.", "Say OK", temperature=0.0, max_tokens=256)
     name = "abstract"
 
     def complete(self, system: str, user: str, temperature: float = 0.4, max_tokens: int = 2000) -> Completion:
