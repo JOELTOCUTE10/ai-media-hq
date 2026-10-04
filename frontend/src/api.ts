@@ -59,8 +59,27 @@ export interface Task {
   priority: string; status: string; input: Record<string, unknown>; output: Record<string, unknown>;
   error: string | null; retry_count: number; depends_on: number[]; created_at: string;
 }
+// The backend emits `type`; older clients used `event_type`. Accept both so
+// a field rename can never blank the UI again.
 export interface EventItem {
-  id: number; event_type: string; payload: Record<string, unknown>; created_at: string;
+  id: number;
+  type?: string;
+  event_type?: string;
+  payload?: Record<string, unknown> | string;
+  created_at: string;
+}
+export interface TaskItem {
+  id: number;
+  title: string;
+  status: string;
+  priority?: string;
+  created_at: string;
+}
+export interface GoalSummary {
+  id: number;
+  title: string;
+  target_date?: string | null;
+  progress: { pct: number; total: number; completed: number; in_progress: number; failed: number };
 }
 export interface Dashboard {
   channels: { total: number; active: number };

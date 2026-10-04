@@ -4,6 +4,7 @@ import { Sidebar } from "./components";
 import { api, clearToken } from "./api";
 import Login from "./pages/Login";
 import Splash from "./components/Splash";
+import ErrorBoundary from "./components/ErrorBoundary";
 import CommandCenter from "./pages/CommandCenter";
 import Channels from "./pages/Channels";
 import Agents from "./pages/Agents";
@@ -72,6 +73,7 @@ export default function App() {
       {booting ? (
         <Splash onDone={() => { sessionStorage.setItem("booted", "1"); setBooting(false); }} />
       ) : null}
+      <ErrorBoundary>
       <Routes>
         <Route path="/login" element={<Login onAuthed={() => setAuthed(true)} />} />
         {!authed ? (
@@ -104,6 +106,7 @@ export default function App() {
           </>
         )}
       </Routes>
+      </ErrorBoundary>
     </HashRouter>
   );
 }
