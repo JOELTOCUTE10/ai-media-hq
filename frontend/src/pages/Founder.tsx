@@ -1,11 +1,17 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
-import { Btn, Empty, Err, Field, Note, Progress } from "../components";
+import { Btn, Empty, Err, Note, Progress } from "../components";
 
 interface Goal { id: number; title: string; description: string; status: string;
   target_date: string | null; progress: { total: number; completed: number; failed: number; pct: number; in_progress: number } }
 interface GoalDetail extends Goal { tasks: { id: number; title: string; status: string; assigned_agent_id: number | null }[] }
 interface Channel { name: string; slug: string }
+
+const ArrowUp = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 19V5M5 12l7-7 7 7" />
+  </svg>
+);
 
 export default function FounderMode() {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -13,6 +19,7 @@ export default function FounderMode() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [error, setError] = useState("");
   const [note, setNote] = useState("");
+  const [provider, setProvider] = useState("");
   const [form, setForm] = useState({ title: "", description: "", channel_slug: "", target_date: "" });
 
   const load = async () => {
@@ -21,7 +28,12 @@ export default function FounderMode() {
       setChannels(await api<Channel[]>("/api/channels"));
     } catch (e: any) { setError(e.message); }
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    api<{ ai_provider?: string }>("/api/health")
+      .then((h) => setProvider(h.ai_provider || ""))
+      .catch(() => {});
+  }, []);
 
   async function createGoal() {
     if (!form.title.trim()) return;
@@ -44,27 +56,38 @@ export default function FounderMode() {
 
   return (
     <>
-      <div className="page-head"><h1>Founder Mode</h1>
-        <span className="subtle">State a goal; the system breaks it into real tasks with dependencies, agents and tracking.</span></div>
-      <Err message={error} /><Note message={note} />
-      <div className="card">
-        <h3>New goal</h3>
-        <div className="form-grid">
-          <Field label="Goal"><input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Grow the AI channel" /></Field>
-          <Field label="Channel (optional)">
-            <select value={form.channel_slug} onChange={(e) => setForm({ ...form, channel_slug: e.target.value })}>
-              <option value="">all channels</option>
-              {channels.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
-            </select>
-          </Field>
-          <Field label="Target date (optional)">
-            <input type="date" value={form.target_date} onChange={(e) => setForm({ ...form, target_date: e.target.value })} />
-          </Field>
-        </div>
-        <Field label="Description"><textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
-        <Btn onClick={createGoal} disabled={!form.title.trim()}>Create goal + plan</Btn>
+      <div className="prompt-hero">
+        <h1>State a goal. The company builds it.</h1>
+        <div className="page-sub">The system breaks your goal into real tasks with dependencies, agents and tracking.</div>
       </div>
-      <div className="card">
+      <Err message={error} /><Note message={note} />
+      <div className="prompt-box">
+        <input
+          className="prompt-input"
+          value={form.title}
+          onChange={(e) => setForm({ ...form, title: e.target.value })}
+          placeholder="Grow the AI channel to 10,000 subscribers..."
+          onKeyDown={(e) => { if (e.key === "Enter") createGoal(); }}
+        />
+        <textarea
+          className="prompt-input"
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+          placeholder="Optional: add context, constraints or a deadline..."
+        />
+        <div className="prompt-toolbar">
+          <span className="auto-pill"><span className="dot" />{provider ? `Auto · ${provider} + failover` : "Auto model"}</span>
+          <select value={form.channel_slug} onChange={(e) => setForm({ ...form, channel_slug: e.target.value })}>
+            <option value="">all channels</option>
+            {channels.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+          </select>
+          <input type="date" value={form.target_date} onChange={(e) => setForm({ ...form, target_date: e.target.value })} />
+          <button className="prompt-send" onClick={createGoal} disabled={!form.title.trim()}>
+            <ArrowUp /> Create plan
+          </button>
+        </div>
+      </div>
+      <div className="card" style={{ marginTop: 16 }}>
         <h3>Goals ({goals.length})</h3>
         {goals.length === 0 ? <Empty>No goals yet. State one above - e.g. "Grow the AI channel".</Empty> : (
           <table>

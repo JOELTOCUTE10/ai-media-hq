@@ -2,16 +2,16 @@ export function LogoMark({ size = 34, glow = true }: { size?: number; glow?: boo
   return (
     <svg
       width={size} height={size} viewBox="0 0 48 48" fill="none"
-      style={glow ? { filter: "drop-shadow(0 0 10px rgba(34,211,238,.45))" } : undefined}
+      style={glow ? { filter: "drop-shadow(0 0 10px rgba(79,70,229,.35))" } : undefined}
     >
       <defs>
         <linearGradient id="lg1" x1="0" y1="0" x2="48" y2="48">
-          <stop offset="0%" stopColor="#22d3ee" />
-          <stop offset="55%" stopColor="#818cf8" />
-          <stop offset="100%" stopColor="#c084fc" />
+          <stop offset="0%" stopColor="#4f46e5" />
+          <stop offset="55%" stopColor="#7c3aed" />
+          <stop offset="100%" stopColor="#a855f7" />
         </linearGradient>
         <linearGradient id="lg2" x1="0" y1="48" x2="48" y2="0">
-          <stop offset="0%" stopColor="#22d3ee" />
+          <stop offset="0%" stopColor="#4f46e5" />
           <stop offset="100%" stopColor="#a78bfa" />
         </linearGradient>
       </defs>
@@ -19,7 +19,7 @@ export function LogoMark({ size = 34, glow = true }: { size?: number; glow?: boo
       <path
         d="M24 2 L44 14 L44 34 L24 46 L4 34 L4 14 Z"
         rx="4"
-        stroke="url(#lg1)" strokeWidth="2.4" fill="rgba(12,18,34,.85)"
+        stroke="url(#lg1)" strokeWidth="2.4" fill="rgba(255,255,255,.92)"
       />
       {/* signal waves */}
       <path d="M14 17 a 12 12 0 0 1 0 14" stroke="url(#lg2)" strokeWidth="2.2" strokeLinecap="round" fill="none" opacity=".85" />
