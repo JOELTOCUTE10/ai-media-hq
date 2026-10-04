@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api, clearToken, setToken } from "../api";
+import { LogoMark } from "../components/Logo";
 
 export default function Login({ onAuthed }: { onAuthed: () => void }) {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -36,26 +37,32 @@ export default function Login({ onAuthed }: { onAuthed: () => void }) {
 
   return (
     <div className="login-wrap">
+      <div className="aurora a1" /><div className="aurora a2" /><div className="aurora a3" />
       <form className="card login-card" onSubmit={submit}>
-        <div className="logo" style={{ fontSize: 20 }}>AI MEDIA <span className="hq">HQ</span></div>
-        <div className="page-sub" style={{ marginBottom: 14 }}>
-          {mode === "login" ? "Sign in to your operating center" : "Create your media company account"}
+        <div className="login-brand">
+          <LogoMark size={56} />
+          <div className="login-title">AI MEDIA <span className="hq">HQ</span></div>
+          <div className="login-tag">{mode === "login" ? "Operating center" : "Create your company"}</div>
         </div>
         {error ? <div className="error-banner">{error}</div> : null}
         {mode === "register" ? (
-          <>
+          <div className="login-f1">
             <label>Organization name</label>
             <input value={orgName} onChange={(e) => setOrgName(e.target.value)} required />
-          </>
+          </div>
         ) : null}
-        <label>Email</label>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <label>Password {mode === "register" ? "(min 8 characters)" : ""}</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <button className="primary" style={{ width: "100%", marginTop: 16 }} disabled={busy}>
+        <div className="login-f2">
+          <label>Email</label>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        </div>
+        <div className="login-f3">
+          <label>Password {mode === "register" ? "(min 8 characters)" : ""}</label>
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        </div>
+        <button className="primary" style={{ width: "100%", marginTop: 18 }} disabled={busy}>
           {busy ? "Working..." : mode === "login" ? "Sign in" : "Create account"}
         </button>
-        <p style={{ color: "var(--muted)", fontSize: 12, textAlign: "center", marginTop: 12 }}>
+        <p style={{ color: "var(--muted)", fontSize: 12, textAlign: "center", marginTop: 14, marginBottom: 0 }}>
           {mode === "login" ? "No account yet? " : "Already registered? "}
           <a href="#" onClick={(e) => { e.preventDefault(); setMode(mode === "login" ? "register" : "login"); }}>
             {mode === "login" ? "Create one" : "Sign in"}

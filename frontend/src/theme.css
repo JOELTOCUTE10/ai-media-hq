@@ -243,3 +243,165 @@ tr:hover td { background: rgba(34, 211, 238, 0.05); }
   letter-spacing: 0.1em; margin-bottom: 3px; font-weight: 700;
 }
 .dossier-body { white-space: pre-wrap; color: var(--text); opacity: 0.88; }
+
+/* ============================================
+   PREMIUM UI LAYER — logo, splash, login, motion
+   ============================================ */
+
+/* --- keyframes --- */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(.82); }
+  60% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes float1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, 30px) scale(1.12); }
+}
+@keyframes float2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-50px, 20px) scale(1.08); }
+}
+@keyframes pulseDot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, .55); }
+  70% { box-shadow: 0 0 0 7px rgba(52, 211, 153, 0); }
+}
+@keyframes logoDraw {
+  from { opacity: 0; transform: scale(.5) rotate(-8deg); }
+  to { opacity: 1; transform: scale(1) rotate(0); }
+}
+@keyframes barFill {
+  from { width: 0; }
+  to { width: 100%; }
+}
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- aurora background blobs (login + splash) --- */
+.aurora {
+  position: absolute; border-radius: 50%; filter: blur(90px); opacity: .5;
+  pointer-events: none; will-change: transform;
+}
+.aurora.a1 { width: 480px; height: 480px; background: rgba(34, 211, 238, .16); top: -120px; left: -80px; animation: float1 11s ease-in-out infinite; }
+.aurora.a2 { width: 520px; height: 520px; background: rgba(167, 139, 250, .15); bottom: -160px; right: -100px; animation: float2 13s ease-in-out infinite; }
+.aurora.a3 { width: 300px; height: 300px; background: rgba(192, 132, 252, .10); top: 40%; left: 55%; animation: float1 17s ease-in-out infinite reverse; }
+
+/* --- splash screen --- */
+.splash {
+  position: fixed; inset: 0; z-index: 9999; overflow: hidden;
+  background: radial-gradient(1100px 700px at 50% 35%, #0b1430 0%, var(--bg) 60%);
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity .55s ease, visibility .55s;
+}
+.splash-leave { opacity: 0; visibility: hidden; }
+.splash-inner { text-align: center; position: relative; z-index: 2; }
+.splash-logo { animation: logoDraw 1s cubic-bezier(.2, .9, .3, 1.2) both; }
+.splash-name {
+  font-size: 30px; font-weight: 800; letter-spacing: .14em; margin-top: 22px;
+  animation: fadeUp .7s .35s both;
+  background: linear-gradient(90deg, var(--text) 40%, var(--accent) 55%, var(--accent-2) 65%, var(--text) 80%);
+  background-size: 400px 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: fadeUp .7s .35s both, shimmer 2.6s linear infinite;
+}
+.splash-name .hq { -webkit-text-fill-color: transparent; }
+.splash-sub {
+  color: var(--muted); font-size: 12px; letter-spacing: .32em; text-transform: uppercase;
+  margin-top: 10px; animation: fadeUp .7s .55s both;
+}
+.splash-bar {
+  width: 240px; height: 3px; margin: 26px auto 0; border-radius: 999px;
+  background: rgba(28, 42, 71, .8); overflow: hidden;
+}
+.splash-bar-fill {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  animation: barFill 2s .3s cubic-bezier(.4, 0, .2, 1) both;
+  box-shadow: 0 0 12px rgba(34, 211, 238, .7);
+}
+.splash-status {
+  color: var(--muted); font-size: 11px; margin-top: 14px; letter-spacing: .08em;
+  animation: fadeUp .6s .9s both;
+}
+
+/* --- login page --- */
+.login-wrap {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden; padding: 20px;
+  background: radial-gradient(1000px 600px at 70% 20%, #0d1730 0%, var(--bg) 65%);
+}
+.login-card {
+  width: 100%; max-width: 420px; padding: 30px 30px 26px; z-index: 2; position: relative;
+  background: rgba(12, 18, 34, .78); backdrop-filter: blur(14px);
+  border: 1px solid rgba(34, 211, 238, .16); border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .55), 0 0 40px rgba(34, 211, 238, .06) inset;
+  animation: popIn .65s cubic-bezier(.2, .9, .3, 1.1) both;
+}
+.login-card label { animation: fadeUp .5s both; }
+.login-card .login-f1 { animation: fadeUp .5s .1s both; }
+.login-card .login-f2 { animation: fadeUp .5s .2s both; }
+.login-card .login-f3 { animation: fadeUp .5s .3s both; }
+.login-brand { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 18px; }
+.login-title { font-size: 21px; font-weight: 800; letter-spacing: .1em; }
+.login-tag { color: var(--muted); font-size: 11.5px; letter-spacing: .24em; text-transform: uppercase; }
+.login-card input {
+  background: rgba(6, 9, 19, .7); border: 1px solid var(--border); border-radius: 9px;
+  padding: 10px 12px; color: var(--text); font-size: 13px; transition: border .2s, box-shadow .2s;
+}
+.login-card input:focus {
+  outline: none; border-color: rgba(34, 211, 238, .55);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, .12);
+}
+
+/* --- premium buttons --- */
+button.primary, .btn-primary {
+  background: linear-gradient(92deg, #22d3ee 0%, #818cf8 55%, #c084fc 110%);
+  border: none; color: #071018; font-weight: 700; letter-spacing: .02em;
+  border-radius: 9px; padding: 10px 16px; cursor: pointer; font-size: 13px;
+  transition: transform .15s ease, box-shadow .2s ease, filter .2s;
+  box-shadow: 0 6px 22px rgba(34, 211, 238, .18);
+}
+button.primary:hover:not(:disabled), .btn-primary:hover {
+  filter: brightness(1.1); transform: translateY(-1px);
+  box-shadow: 0 8px 30px rgba(34, 211, 238, .3);
+}
+button.primary:disabled { opacity: .6; cursor: default; }
+
+/* --- dashboard polish --- */
+.card {
+  transition: transform .18s ease, border-color .18s ease, box-shadow .25s ease;
+}
+.card:hover {
+  transform: translateY(-2px); border-color: rgba(34, 211, 238, .35);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .35), 0 0 24px rgba(34, 211, 238, .05);
+}
+.stat-value {
+  background: linear-gradient(92deg, var(--text) 30%, var(--accent) 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+h1 {
+  background: linear-gradient(92deg, var(--text) 55%, var(--accent) 115%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  width: fit-content;
+}
+.main > * { animation: pageIn .38s ease both; }
+.health-dot {
+  width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px;
+  animation: pulseDot 2s infinite;
+}
+.sidebar { background: linear-gradient(180deg, #0c1222 0%, #0a0f1e 100%); }
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-thumb { background: #1c2a47; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #27395f; }
+::-webkit-scrollbar-track { background: transparent; }

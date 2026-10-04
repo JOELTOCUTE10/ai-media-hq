@@ -3,6 +3,7 @@ import { HashRouter, Outlet, Route, Routes, useLocation } from "react-router-dom
 import { Sidebar } from "./components";
 import { api, clearToken } from "./api";
 import Login from "./pages/Login";
+import Splash from "./components/Splash";
 import CommandCenter from "./pages/CommandCenter";
 import Channels from "./pages/Channels";
 import Agents from "./pages/Agents";
@@ -53,6 +54,7 @@ function Layout() {
 }
 
 export default function App() {
+  const [booting, setBooting] = useState(!sessionStorage.getItem("booted"));
   const [authed, setAuthed] = useState(!!localStorage.getItem("token"));
   useEffect(() => {
     const onHash = () => setAuthed(!!localStorage.getItem("token"));
@@ -61,6 +63,9 @@ export default function App() {
   }, []);
   return (
     <HashRouter>
+      {booting ? (
+        <Splash onDone={() => { sessionStorage.setItem("booted", "1"); setBooting(false); }} />
+      ) : null}
       <Routes>
         <Route path="/login" element={<Login onAuthed={() => setAuthed(true)} />} />
         {!authed ? (

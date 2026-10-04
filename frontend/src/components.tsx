@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { LogoLockup } from "./components/Logo";
 
 export function StatusBadge({ status }: { status: string }) {
   const cls =
@@ -77,10 +78,9 @@ export const NAV: { group: string; items: { to: string; label: string }[] }[] = 
 export function Sidebar() {
   return (
     <aside className="sidebar">
-      <div className="logo">
-        AI MEDIA <span className="hq">HQ</span>
+      <div style={{ padding: "2px 4px 14px" }}>
+        <LogoLockup size={36} />
       </div>
-      <div className="logo-sub">AI media company operating system</div>
       {NAV.map((group) => (
         <div className="nav-group" key={group.group}>
           <div className="nav-group-label">{group.group}</div>
