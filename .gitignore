@@ -11,5 +11,3 @@ frontend/dist/
 *.egg-info/
 .DS_Store
 
-# locally built UI for single-service deploy
-backend/static/

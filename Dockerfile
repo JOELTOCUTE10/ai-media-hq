@@ -17,7 +17,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend/ .
 
-# The compiled UI rides along; FastAPI serves it at / (single service)
+# Freshly built UI (root-context builds). Pre-built fallback lives in
+# backend/static in the repo for services that build with backend context.
 COPY --from=frontend-build /web/dist /app/static
 
 EXPOSE 8000
