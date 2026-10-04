@@ -42,8 +42,17 @@ def dashboard(user: User = Depends(get_current_user), db: Session = Depends(get_
                            == func.strftime("%Y-%m", func.now())).scalar() or 0.0)
 
     recommendations = []
-    if integration_status.get("ai_openai") != "configured" and integration_status.get("ai_anthropic") != "configured":
-        recommendations.append("No AI provider configured - agents cannot run. Set AI_PROVIDER and an API key in .env.")
+    # Failover-aware: ANY configured AI key (free-tier or paid) can serve
+    # agent runs via the automatic provider chain, not just openai/anthropic.
+    ai_keys = ("ai_openai", "ai_anthropic", "ai_groq", "ai_mistral",
+               "ai_openrouter", "ai_gemini")
+    configured_providers = [k[3:] for k in ai_keys
+                            if integration_status.get(k) == "configured"]
+    if not configured_providers:
+        recommendations.append("No AI provider configured - agents cannot run. Set AI_PROVIDER and an API key in .env (groq/mistral/openrouter/gemini have free tiers).")
+    elif configured_providers:
+        chain = " -> ".join(configured_providers)
+        recommendations.append(f"AI providers online ({chain}) - automatic failover active.")
     if task_counts.get("failed", 0):
         recommendations.append(f"{task_counts['failed']} failed task(s) need attention in Tasks.")
     if task_counts.get("blocked", 0):
