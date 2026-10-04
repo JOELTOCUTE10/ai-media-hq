@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api, setToken } from "../api";
+import { api, clearToken, setToken } from "../api";
 
 export default function Login({ onAuthed }: { onAuthed: () => void }) {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -23,10 +23,12 @@ export default function Login({ onAuthed }: { onAuthed: () => void }) {
         body: JSON.stringify(body),
       });
       setToken(res.access_token);
+      await api("/api/auth/me");
       onAuthed();
       window.location.hash = "#/";
     } catch (err: any) {
-      setError(err.message);
+      clearToken();
+      setError(err?.message || "Sign in failed");
     } finally {
       setBusy(false);
     }

@@ -1,7 +1,7 @@
 const API_URL = (import.meta as any).env?.VITE_API_URL ?? "https://ai-media-hq-production.up.railway.app";
 
 function sanitizeToken(value: string): string {
-  return value.replace(/[\\s\\u200B-\\u200D\\uFEFF]+/g, "");
+  return value.replace(/[\s\u200B-\u200D\uFEFF]+/g, "");
 }
 
 let token: string = sanitizeToken(localStorage.getItem("token") ?? "");
@@ -26,7 +26,7 @@ export class ApiError extends Error {
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   token = sanitizeToken(token || localStorage.getItem("token") || "");
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(API_URL + path, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -36,7 +36,6 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   });
   if (res.status === 401) {
     clearToken();
-    window.location.hash = "#/login";
     throw new ApiError(401, "Not authenticated");
   }
   if (!res.ok) {
@@ -49,39 +48,4 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   }
   if (res.status === 204) return {} as T;
   return res.json();
-}
-
-export interface Channel {
-  id: number; name: string; slug: string; description: string; niche: string; audience: string;
-  is_active: boolean; approval_required: boolean;
-  content_rules: Record<string, unknown>; publishing_rules: Record<string, unknown>;
-}
-export interface Agent {
-  id: number; key: string; name: string; role: string; description: string; department: string;
-  capabilities: string[]; tools: string[]; permission_level: string; permissions: string[];
-  status: string; current_task_id: number | null;
-}
-export interface Task {
-  id: number; title: string; description: string; assigned_agent_id: number | null;
-  channel_id: number | null; priority: string; status: string; input: Record<string, unknown>;
-  output: Record<string, unknown>; error: string | null; retry_count: number;
-  depends_on: number[]; created_at: string;
-}
-export interface EventItem {
-  id: number; event_type: string; payload: Record<string, unknown>; created_at: string;
-}
-export interface Dashboard {
-  channels: { total: number; active: number };
-  agents: { total: number; active: number; paused: number };
-  tasks: Record<string, number>;
-  content: { in_production: number; awaiting_approval: number };
-  integrations: Record<string, string>;
-  costs: { month_to_date_usd: number; budget_usd: number };
-  recent_events: EventItem[];
-  recommendations: string[];
-}
-export interface SettingsBundle {
-  organization: { id: number; name: string; settings: Record<string, unknown> };
-  system: { ai_provider: string; ai_model: string; task_runner_enabled: boolean; monthly_budget_usd: number };
-  integrations: { key: string; name: string; status: string }[];
 }
