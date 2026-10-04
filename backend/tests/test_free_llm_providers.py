@@ -135,3 +135,29 @@ def test_upstream_error_body_is_surfaced(prov, monkeypatch):
     monkeypatch.setattr(httpx, "post", lambda url, **kw: _Resp())
     with pytest.raises(RuntimeError, match="gemini-bogus"):
         get_ai_provider().complete("system", "user")
+
+
+def test_api_key_whitespace_is_stripped(prov, monkeypatch):
+    """Keys pasted from web consoles often carry trailing spaces/newlines -
+    they must be stripped before hitting the provider (fix by Joel, Oct 3)."""
+    import httpx
+    s = prov("groq")
+    monkeypatch.setattr(s, "GROQ_API_KEY", "  real-key-with-spaces  \n")
+
+    class _Resp:
+        status_code = 200
+        text = ""
+
+        def json(self):
+            return {"choices": [{"message": {"content": "ok"}}], "model": "m",
+                    "usage": {"prompt_tokens": 1, "completion_tokens": 1}}
+
+    seen = {}
+
+    def fake_post(url, **kw):
+        seen["auth"] = kw["headers"]["Authorization"]
+        return _Resp()
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    get_ai_provider().complete("s", "u")
+    assert seen["auth"] == "Bearer real-key-with-spaces"

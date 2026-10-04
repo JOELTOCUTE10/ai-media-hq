@@ -43,7 +43,7 @@ class OpenAICompatibleProvider(AIProvider):
 
     def _credentials(self) -> tuple[str, str]:
         settings = get_settings()
-        api_key = getattr(settings, self.key_attr, "")
+        api_key = getattr(settings, self.key_attr, "").strip()
         model = settings.AI_MODEL or self.default_model
         if not api_key:
             raise ProviderNotConfiguredError(
